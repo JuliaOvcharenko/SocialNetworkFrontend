@@ -1,6 +1,13 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
+    "strict": true,
+    "paths": {
+			"@shared/*": ["./src/shared/*"],
+			"@modules/*": ["./src/modules/*"],
+			"@assetsIcons/*": ["./src/assets/icons/*"],
+      "@assetsImages/*": ["./src/assets/images/*"],
+      "@assetsFonts/*": ["./src/assets/fonts/*"]
+		}
   }
 }
