@@ -14,13 +14,15 @@ export function Header(props: HeaderProps) {
             <TouchableOpacity onPress={() => router.navigate('/')}>
                 <IMAGES.LogoImage style={{ width: 145, height: 18 }}/>
             </TouchableOpacity>
-            
+
             <View style={styles.headerButtons}>
                 {showCreateButton && (
                     <IMAGES.addPostButton style={{ width: 40, height: 40 }}/>
                 )}
                 {showSettingsButton && (
-                    <IMAGES.settingsButton style={{ width: 40, height: 40, marginLeft: 8 }}/>
+                    <TouchableOpacity onPress={() => router.navigate('/settings')}>
+                        <IMAGES.settingsButton style={{ width: 40, height: 40, marginLeft: 8 }} />
+                    </TouchableOpacity>
                 )}
                 {showLogoutButton && (
                     <IMAGES.logoutButton style={{ width: 40, height: 40, marginLeft: 8 }}/>

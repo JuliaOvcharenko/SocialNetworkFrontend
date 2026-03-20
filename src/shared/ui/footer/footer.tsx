@@ -13,12 +13,12 @@ export function Footer() {
             <View style={styles.footerContainer}>
                 <TouchableOpacity onPress={() => router.navigate('/')} style={styles.footerBlock}>
                     {pathname === '/' && <View style={styles.activeIndicator} />}
-                    <IMAGES.homeButton style={{ width: 16, height: 16 }} />
+                    <IMAGES.homeButton style={{ width: 16, height: 16 }}/>
                     <Text style={styles.footerText}>Головна</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => router.navigate('/profile')} style={styles.footerBlock}>
-                    {pathname === '/profile' && <View style={styles.activeIndicator} />}
+                <TouchableOpacity onPress={() => router.navigate('/publications')} style={styles.footerBlock}>
+                    {pathname === '/publications' && <View style={styles.activeIndicator} />}
                     <IMAGES.publicationButton style={{ width: 18, height: 18 }} />
                     <Text style={styles.footerText}>Мої публікації</Text>
                 </TouchableOpacity>
