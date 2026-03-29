@@ -20,7 +20,7 @@ export function Header(props: HeaderProps) {
                     <IMAGES.addPostButton style={{ width: 40, height: 40 }}/>
                 )}
                 {showSettingsButton && (
-                    <TouchableOpacity onPress={() => router.navigate('/settings')}>
+                    <TouchableOpacity onPress={() => router.push('/settings')}>
                         <IMAGES.settingsButton style={{ width: 40, height: 40, marginLeft: 8 }} />
                     </TouchableOpacity>
                 )}
