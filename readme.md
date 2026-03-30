@@ -8,12 +8,18 @@
 <img src="https://img.shields.io/badge/Mobile_App-Android%20%7C%20iOS-3DDC84?style=for-the-badge&logo=android&logoColor=white" />
 <img src="https://img.shields.io/badge/Real--time_Chat-Socket.IO-010101?style=for-the-badge&logo=socketdotio&logoColor=white" />
 
+</p>
+
 <br/><br/>
+
+<p align="center">
 <img src="https://img.shields.io/badge/Frontend-FF8C00?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Architecture-FED-800080?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Module_Architecture-2ECC71?style=for-the-badge" />
 
 </p>
+
+
 
 _____
 
