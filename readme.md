@@ -10,8 +10,6 @@
 
 </p>
 
-<br/><br/>
-
 <p align="center">
 <img src="https://img.shields.io/badge/Frontend-FF8C00?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Architecture-FED-800080?style=for-the-badge" />
