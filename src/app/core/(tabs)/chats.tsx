@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { COLOURS } from "@shared/constants/colours";
 import { StyleSheet } from "react-native";
 import { Header } from "@shared/ui/header/header";
-import { IMAGES } from "../../shared/ui/images";
+import { IMAGES } from "../../../shared/ui/images";
 
 export default function FriendsScreen() {
     const [activeTab, setActiveTab] = useState<'contacts' | 'messages' | 'groupChats'>('contacts');
@@ -19,7 +19,7 @@ export default function FriendsScreen() {
             key: 'messages',
             label: 'Повідомлення',
             icon: <IMAGES.chatButton style={styles.icon} />,
-            badge: 2,
+            badge: 0,
         },
         {
             key: 'groupChats',
@@ -51,7 +51,7 @@ export default function FriendsScreen() {
                                 )}
                             </View>
 
-                            <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
+                            <Text style={[styles.tabTextActive]}>
                                 {tab.label}
                             </Text>
 
@@ -102,8 +102,8 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     icon: {
-        width: 22,
-        height: 22,
+        width: 16,
+        height: 16,
     },
     badge: {
         position: 'absolute',
@@ -119,28 +119,24 @@ const styles = StyleSheet.create({
     },
     badgeText: {
         color: '#fff',
-        fontSize: 11,
+        fontSize: 10,
         fontWeight: '600',
     },
-    tabText: {
-        fontSize: 12,
-        color: '#9E9E9E',
-        textAlign: 'center',
-    },
+
     tabTextActive: {
         color: COLOURS.darkBlue,
         fontWeight: '600',
     },
     indicator: {
         position: 'absolute',
-        top: 0,    
-        left: 0,
-        right: 0,
+        top: 0,
+        left: '50%',
+        transform: [{ translateX: -30}], 
+        width: 60,
         height: 2,
-        backgroundColor: COLOURS.darkBlue,
-        borderRadius: 1,
+        backgroundColor: COLOURS.Plum,
     },
-    content: {
+        content: {
         flex: 1,
         padding: 16,
     },

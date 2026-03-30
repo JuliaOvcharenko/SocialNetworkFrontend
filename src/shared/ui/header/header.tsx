@@ -11,7 +11,7 @@ export function Header(props: HeaderProps) {
     const {showCreateButton, showSettingsButton, showLogoutButton} = props
     return (
         <View style={styles.headerContainer}>
-            <TouchableOpacity onPress={() => router.navigate('/')}>
+            <TouchableOpacity onPress={() => router.navigate('core/')}>
                 <IMAGES.LogoImage style={{ width: 145, height: 18 }}/>
             </TouchableOpacity>
 
@@ -20,7 +20,7 @@ export function Header(props: HeaderProps) {
                     <IMAGES.addPostButton style={{ width: 40, height: 40 }}/>
                 )}
                 {showSettingsButton && (
-                    <TouchableOpacity onPress={() => router.push('/settings')}>
+                    <TouchableOpacity onPress={() => router.push('core/settings')}>
                         <IMAGES.settingsButton style={{ width: 40, height: 40, marginLeft: 8 }} />
                     </TouchableOpacity>
                 )}
