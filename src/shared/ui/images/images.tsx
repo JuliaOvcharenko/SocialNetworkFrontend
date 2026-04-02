@@ -6,6 +6,8 @@ import { addPostButton } from "./_images/header/add-post-button";
 import { LogoImage } from "./_images/header/logo-image";
 import { logoutButton } from "./_images/header/logout-button";
 import { settingsButton } from "./_images/header/settings-button";
+import { EyeClose } from "./_images/components/eye/eyeClose";
+import { EyeOpen } from "./_images/components/eye/eyeOpen";
 
 
 export const IMAGES = {
@@ -16,5 +18,7 @@ export const IMAGES = {
     publicationButton,
     homeButton,
     chatButton,
-    friendsButton
+    friendsButton,
+    EyeOpen,
+    EyeClose
 }
