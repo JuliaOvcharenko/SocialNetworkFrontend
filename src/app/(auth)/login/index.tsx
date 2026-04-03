@@ -11,7 +11,7 @@ export default function LoginScreen() {
         <View style={styles.container}>
             <View style={styles.card}>
                 <View style={styles.tabContainer}>
-                    <TouchableOpacity onPress={() => router.push('/')} style={styles.tab}>
+                    <TouchableOpacity onPress={() => router.push('/register')} style={styles.tab}>
                         <Text style={styles.tabText}>Реєстрація</Text>
                     </TouchableOpacity>
                     <View style={[styles.tab, styles.activeTab]}>

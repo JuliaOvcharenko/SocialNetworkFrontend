@@ -7,7 +7,8 @@ export default function AuthLayout() {
 	return (
 		<SafeAreaProvider>
 			<View style={{flex: 1 }}>
-				<Stack screenOptions={{header: AuthHeader}}>
+				<Stack screenOptions={{header: AuthHeader, animation: 'none' }}>
+					<Stack.Screen name="register"/>
 					<Stack.Screen name="login"/>
 				</Stack>
 			</View>

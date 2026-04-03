@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { RegisterForm } from '@modules/auth/ui/register-form';
-import { styles } from '../../modules/auth/ui/_auth.styles';
+import { styles } from '../../../modules/auth/ui/_auth.styles';
 
 export default function RegisterScreen() {
     const router = useRouter();
