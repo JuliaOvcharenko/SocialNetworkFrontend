@@ -9,8 +9,12 @@ export function Footer() {
     const pathname = usePathname();
     const router = useRouter();
 
+    // height: 40 + insets.bottom, 
+    //                 paddingBottom: insets.bottom + 5,
+    //                 paddingTop: 0,
+
     return (
-        <View style={[styles.container, { paddingBottom: 45, minHeight: 30, paddingTop: 10, height: 95, }]}>
+        <View style={[styles.container, { paddingBottom: 41, minHeight: 30, paddingTop: 10, height: 62, }]}>
             <View style={styles.tabWrapper} onTouchEnd={() => pathname !== 'core/' && router.push('core/')}>
                 <View style={styles.tabItem}>
                     <IMAGES.homeButton style={styles.icon} />
@@ -72,14 +76,14 @@ const styles = StyleSheet.create({
         width: 80,
         alignItems: 'center',
         justifyContent: 'flex-start',
-        paddingTop: 5,
+        paddingTop: 2,
         gap: 2,
     },
     tabItemWide: {
         width: 100,
         alignItems: 'center',
         justifyContent: 'flex-start',
-        paddingTop: 4,
+        paddingTop: 2,
         gap: 2,
     },
     icon: {

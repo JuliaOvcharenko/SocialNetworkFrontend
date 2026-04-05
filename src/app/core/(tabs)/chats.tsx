@@ -12,7 +12,7 @@ export default function FriendsScreen() {
         {
             key: 'contacts',
             label: 'Контакти',
-            icon: <IMAGES.friendsButton style={styles.icon} />,
+            icon: <IMAGES.friendsButton style={styles.iconContacts} />,
             badge: 0,
         },
         {
@@ -103,6 +103,10 @@ const styles = StyleSheet.create({
     },
     icon: {
         width: 16,
+        height: 16,
+    },
+    iconContacts: {
+        width: 22,
         height: 16,
     },
     badge: {

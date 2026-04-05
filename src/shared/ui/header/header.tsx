@@ -25,7 +25,7 @@ export function Header(props: HeaderProps) {
                     </TouchableOpacity>
                 )}
                 {showLogoutButton && (
-                    <TouchableOpacity onPress={() => router.push('logout')}>
+                    <TouchableOpacity onPress={() => router.push('core/pp')}>
                         <IMAGES.logoutButton style={{ width: 40, height: 40, marginLeft: 8 }}/>
                     </TouchableOpacity>
                 )}
