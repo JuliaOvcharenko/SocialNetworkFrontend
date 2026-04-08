@@ -5,5 +5,7 @@ export const COLOURS = {
 	Blue20: "#CDCED2",
     Blue10: "#E2E0E8",
     Plum: "#543C52",
-    Plum50: "#E9E5EE"
+    Plum50: "#E9E5EE",
+    Green100: "#22C55E",
+    Black: "#000000",
 };

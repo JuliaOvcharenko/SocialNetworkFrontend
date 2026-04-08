@@ -5,7 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Input } from '@shared/ui/input/input';
 import { Button } from '@shared/ui/button/button';
 import { RegisterFormFields } from '@modules/types/auth.types';
-import { registerValidator } from '@modules/lib/login/register.validation';
+import { registerValidator } from '@modules/lib/login/register.schema';
 import { styles } from './register-form.styles';
 
 export function RegisterForm() {

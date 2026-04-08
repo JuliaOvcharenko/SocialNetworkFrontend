@@ -8,7 +8,9 @@ import { logoutButton } from "./_images/header/logout-button";
 import { settingsButton } from "./_images/header/settings-button";
 import { EyeClose } from "./_images/components/eye/eyeClose";
 import { EyeOpen } from "./_images/components/eye/eyeOpen";
-
+import { PenButton } from "./_images/buttons/penButton";
+import { CheckBoxFalse } from "./_images/checkBox/checkBoxFalse";
+import { CheckBoxTrue } from "./_images/checkBox/checkBoxTrue";
 
 export const IMAGES = {
     LogoImage,
@@ -20,5 +22,8 @@ export const IMAGES = {
     chatButton,
     friendsButton,
     EyeOpen,
-    EyeClose
+    EyeClose,
+    PenButton,
+    CheckBoxFalse,
+    CheckBoxTrue
 }

@@ -5,7 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Input } from '@shared/ui/input/input'; 
 import { Button } from '@shared/ui/button/button';
 import { LoginFormFields } from '@modules/types/auth.types';
-import { loginValidator } from '@modules/lib/login/login.validation';
+import { loginValidator } from '@modules/lib/login/login.schema';
 import { styles } from './login-form.styles';
 
 
