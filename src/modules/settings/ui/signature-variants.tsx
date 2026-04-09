@@ -2,7 +2,33 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { COLOURS } from "@shared/constants/colours";
-import { IMAGES } from "@shared/ui/images"; 
+import { IMAGES } from "@shared/ui/images";
+import { Button } from "@shared/ui/button";
+
+interface CheckboxProps {
+    isSelected: boolean;
+    label: string;
+    onPress: () => void;
+    isEditing: boolean;
+}
+
+const Checkbox = ({ isSelected, label, onPress, isEditing }: CheckboxProps) => (
+    <TouchableOpacity
+        style={[styles.checkboxContainer, { opacity: isEditing ? 1 : 0.5 }]}
+        onPress={onPress}
+        disabled={!isEditing}
+        activeOpacity={0.7}
+    >
+        {isSelected ? (
+            <IMAGES.CheckBoxTrue style={styles.icon} />
+        ) : (
+            <IMAGES.CheckBoxFalse style={styles.icon} />
+        )}
+        <Text style={styles.checkboxLabel}>
+            {label}
+        </Text>
+    </TouchableOpacity>
+);
 
 interface SignatureVariantsProps {
     isEditing: boolean;
@@ -15,13 +41,13 @@ interface SignatureVariantsProps {
     authorAlias: string;
 }
 
-export function SignatureVariants({ 
-    isEditing, 
+export function SignatureVariants({
+    isEditing,
     isAliasSelected,
     onAliasToggle,
     isElectronicSelected,
     onElectronicToggle,
-    signatureImageUri, 
+    signatureImageUri,
     onSignatureImageChange,
     authorAlias
 }: SignatureVariantsProps) {
@@ -30,7 +56,7 @@ export function SignatureVariants({
         if (!isEditing) return;
 
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'], 
+            mediaTypes: ['images'],
             allowsEditing: true,
             quality: 1,
         });
@@ -43,48 +69,52 @@ export function SignatureVariants({
         }
     };
 
-    const Checkbox = ({ isSelected, label, onPress }: { isSelected: boolean, label: string, onPress: () => void }) => (
-        <TouchableOpacity 
-            style={styles.checkboxContainer} 
-            onPress={onPress} 
-            disabled={!isEditing}
-        >
-            {isSelected ? (
-                <IMAGES.CheckBoxTrue style={styles.icon} />
-            ) : (
-                <IMAGES.CheckBoxFalse style={styles.icon} />
-            )}
-            <Text style={[styles.checkboxLabel, isSelected && styles.checkboxLabelSelected]}>{label}</Text>
-        </TouchableOpacity>
-    );
-
     return (
         <View style={styles.container}>
             <View style={styles.variantBlock}>
-                <Checkbox 
-                    isSelected={isAliasSelected} 
-                    label="Псевдонім автора" 
-                    onPress={onAliasToggle} 
+                <Checkbox
+                    isSelected={isAliasSelected}
+                    label="Псевдонім автора"
+                    onPress={onAliasToggle}
+                    isEditing={isEditing}
                 />
                 <Text style={styles.aliasText}>{authorAlias}</Text>
             </View>
 
             <View style={styles.variantBlock}>
-                <Checkbox 
-                    isSelected={isElectronicSelected} 
-                    label="Мій електронний підпис" 
-                    onPress={onElectronicToggle} 
+                <Checkbox
+                    isSelected={isElectronicSelected}
+                    label="Мій електронний підпис"
+                    onPress={onElectronicToggle}
+                    isEditing={isEditing}
                 />
-                
-                <TouchableOpacity onPress={pickSignatureImage} disabled={!isEditing}>
-                    {signatureImageUri ? (
-                        <Image source={{ uri: signatureImageUri }} style={styles.signatureImage} resizeMode="contain" />
-                    ) : (
-                        <View style={[styles.signaturePlaceholder, !isEditing && { opacity: 0.5 }]}>
-                            <Text style={styles.placeholderText}>Натисніть, щоб додати підпис</Text>
+
+                {isEditing ? (
+                    <View>
+                        <View style={styles.dashedContainer}>
+                            {signatureImageUri ? (
+                                <Image source={{ uri: signatureImageUri }} style={styles.signatureImage} resizeMode="contain" />
+                            ) : (
+                                <Text style={styles.placeholderText}>Немає підпису</Text>
+                            )}
                         </View>
-                    )}
-                </TouchableOpacity>
+
+                        <View style={styles.buttonWrapper}>
+                            <Button
+                                title="Редагувати підпис"
+                                onPress={pickSignatureImage}
+                                variant="outline"
+                            />
+                        </View>
+
+                    </View>
+                ) : (
+                    <View style={styles.viewContainer}>
+                        {signatureImageUri ? (
+                            <Image source={{ uri: signatureImageUri }} style={styles.signatureImage} resizeMode="contain" />
+                        ) : null}
+                    </View>
+                )}
             </View>
         </View>
     );
@@ -95,12 +125,12 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     variantBlock: {
-        marginBottom: 24, 
+        marginBottom: 24,
     },
     checkboxContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 12,
     },
     icon: {
         width: 20,
@@ -108,38 +138,41 @@ const styles = StyleSheet.create({
         marginRight: 10,
     },
     checkboxLabel: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#9A8C9E', 
-    },
-    checkboxLabelSelected: {
-        color: '#9A8C9E',
+        fontSize: 16,
+        fontWeight: '500',
+        color: COLOURS.Plum,
     },
     aliasText: {
         fontSize: 16,
-        color: COLOURS.darkBlue, 
+        fontWeight: '400',
+        color: COLOURS.darkBlue,
+        marginLeft: 30,
     },
     signatureImage: {
-        width: 160,
+        width: '100%',
         height: 60,
-        alignSelf: 'flex-start', 
     },
-    signaturePlaceholder: {
-        width: 160,
-        height: 60,
+    viewContainer: {
+        paddingLeft: 30,
+    },
+    dashedContainer: {
+        width: '100%',
+        height: 80,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: COLOURS.Gray,
         borderStyle: 'dashed',
         borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#F9F9F9',
-        alignSelf: 'flex-start', 
+        marginTop: 8,
+        backgroundColor: COLOURS.white,
     },
     placeholderText: {
-        fontSize: 10,
-        color: '#9E9E9E',
-        textAlign: 'center',
-        padding: 4,
+        fontSize: 12,
+        color: COLOURS.Gray,
+    },
+    buttonWrapper: {
+        marginTop: 16,
+        alignItems: 'flex-start',
     }
 });

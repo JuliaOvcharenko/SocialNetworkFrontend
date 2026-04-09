@@ -11,13 +11,14 @@ import { settingsSchema, SettingsFormData } from "@modules/lib/settings/settings
 import { SectionHeader } from "@modules/settings/ui/section-header";
 import { ProfileCard } from "@modules/settings/ui/profile-card";
 import { PersonalDataForm } from "@modules/settings/ui/personal-data-form";
-import { PasswordForm } from "@modules/settings/ui/password-form";
 import { SignatureVariants } from "@modules/settings/ui/signature-variants";
+import { PasswordForm } from "@modules/settings/ui/password-form";
 
 export default function SettingsScreen() {
     const [activeTab, setActiveTab] = useState<"personal" | "albums">("personal");
     const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [isEditingPersonal, setIsEditingPersonal] = useState(false);
     const [isEditingPassword, setIsEditingPassword] = useState(false);
     const [isEditingSignature, setIsEditingSignature] = useState(false);
@@ -26,18 +27,28 @@ export default function SettingsScreen() {
     const [isElectronicSelected, setIsElectronicSelected] = useState(true);
     const [signatureImage, setSignatureImage] = useState<string | null>(null);
 
-    const { control, trigger, formState: { errors } } = useForm<SettingsFormData>({
+    const { control, trigger, formState: { errors }, watch } = useForm<SettingsFormData>({
         resolver: yupResolver(settingsSchema),
         defaultValues: {
+            authorFullName: 'Гость Користувач',
+            username: '@guest',
             firstName: 'Гость',
             lastName: 'Користувач',
             birthday: '01.01.2000',
             email: 'guest@example.com',
             password: 'guest1234',
+            confirmPassword: 'guest1234',
         }
     });
 
+    const currentFirstName = watch("firstName");
+    const currentLastName = watch("lastName");
+    const currentUsername = watch("username");
+    const currentFullName = `${currentFirstName || ''} ${currentLastName || ''}`.trim();
+
     const pickAvatarImage = async () => {
+        if (!isEditingProfile) return;
+
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
             allowsEditing: true,
@@ -46,6 +57,13 @@ export default function SettingsScreen() {
         });
 
         if (!result.canceled) setAvatarUri(result.assets[0].uri);
+    };
+
+    const handleProfileEditToggle = async () => {
+        if (isEditingProfile) {
+            const isValid = await trigger(["authorFullName", "username"]);
+            if (isValid) setIsEditingProfile(false);
+        } else setIsEditingProfile(true);
     };
 
     const handlePersonalEditToggle = async () => {
@@ -57,7 +75,7 @@ export default function SettingsScreen() {
 
     const handlePasswordEditToggle = async () => {
         if (isEditingPassword) {
-            const isValid = await trigger(["password"]);
+            const isValid = await trigger(["password", "confirmPassword"]);
             if (isValid) setIsEditingPassword(false);
         } else setIsEditingPassword(true);
     };
@@ -86,24 +104,46 @@ export default function SettingsScreen() {
                     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
-                            <View style={styles.section}>
-                                <SectionHeader title="Картка профілю" onEditPress={pickAvatarImage} />
-                                <ProfileCard avatarUri={avatarUri} fullName="Гость Користувач" username="@guest" />
+                            <View style={[styles.section, isEditingProfile && { borderColor: COLOURS.Plum }]}>
+                                <SectionHeader
+                                    title="Картка профілю"
+                                    isEditing={isEditingProfile}
+                                    onEditPress={handleProfileEditToggle}
+                                />
+                                <ProfileCard
+                                    avatarUri={avatarUri}
+                                    onAvatarPress={pickAvatarImage}
+                                    control={control}
+                                    isEditing={isEditingProfile}
+                                    authorFullName={currentFullName || "Ім'я не вказано"}
+                                    usernameView={currentUsername || "@username"}
+                                />
                             </View>
 
-                            <View style={styles.section}>
-                                <SectionHeader title="Особиста інформація" isEditing={isEditingPersonal} onEditPress={handlePersonalEditToggle} />
+                            <View style={[styles.section, { paddingBottom: 0 }, isEditingPersonal && { borderColor: COLOURS.Plum }]}>
+                                <SectionHeader
+                                    title="Особиста інформація"
+                                    isEditing={isEditingPersonal}
+                                    onEditPress={handlePersonalEditToggle}
+                                />
                                 <PersonalDataForm control={control} errors={errors} isEditing={isEditingPersonal} />
+
+                                <View style={[styles.innerPasswordBox, isEditingPassword && styles.innerPasswordBoxEditing]}>
+                                    <SectionHeader
+                                        title="Пароль"
+                                        isEditing={isEditingPassword}
+                                        onEditPress={handlePasswordEditToggle}
+                                    />
+                                    <PasswordForm control={control} errors={errors} isEditing={isEditingPassword} />
+                                </View>
                             </View>
 
-                            <View style={styles.section}>
-                                <SectionHeader title="Пароль" isEditing={isEditingPassword} onEditPress={handlePasswordEditToggle} />
-                                <PasswordForm control={control} errors={errors} isEditing={isEditingPassword} />
-                            </View>
-
-                            <View style={styles.section}>
-                                <SectionHeader title="Варіанти підпису" isEditing={isEditingSignature} onEditPress={handleSignatureEditToggle} />
-
+                            <View style={[styles.section, { paddingBottom: 0 }, isEditingSignature && { borderColor: COLOURS.Plum }]}>
+                                <SectionHeader
+                                    title="Варіанти підпису"
+                                    isEditing={isEditingSignature}
+                                    onEditPress={handleSignatureEditToggle}
+                                />
                                 <SignatureVariants
                                     isEditing={isEditingSignature}
                                     isAliasSelected={isAliasSelected}
@@ -112,7 +152,7 @@ export default function SettingsScreen() {
                                     onElectronicToggle={() => setIsElectronicSelected(!isElectronicSelected)}
                                     signatureImageUri={signatureImage}
                                     onSignatureImageChange={setSignatureImage}
-                                    authorAlias="Гость Користувач"
+                                    authorAlias={currentFullName || "Ім'я не вказано"}
                                 />
                             </View>
 
@@ -127,12 +167,54 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: COLOURS.Plum50 },
-    tabsContainer: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: COLOURS.Plum50, paddingHorizontal: 16, paddingVertical: 20 },
-    tab: { marginRight: 24, paddingVertical: 5, position: "relative" },
-    tabText: { fontSize: 14, color: "#9E9E9E" },
-    tabTextActive: { color: COLOURS.darkBlue, fontWeight: "600" },
-    indicator: { position: "absolute", bottom: -1, left: 0, right: 0, height: 2, backgroundColor: COLOURS.darkBlue, borderRadius: 1 },
+    tabsContainer: {
+        flexDirection: "row",
+        borderBottomWidth: 1,
+        borderBottomColor: COLOURS.Plum50,
+        paddingHorizontal: 16,
+        paddingTop: 20,
+        paddingBottom: 6
+    },
+    tab: {
+        marginRight: 24,
+        paddingVertical: 5,
+        position: "relative"
+    },
+    tabText: {
+        fontSize: 16,
+        color: COLOURS.Gray50
+    },
+    tabTextActive: {
+        color: COLOURS.darkBlue,
+        fontWeight: "700"
+    },
+    indicator: {
+        position: "absolute",
+        bottom: -1, left: 0, right: 0,
+        height: 2, backgroundColor: COLOURS.darkBlue, borderRadius: 1
+    },
     content: { flex: 1, padding: 16 },
-    scrollContent: { paddingBottom: 160 },
-    section: { backgroundColor: "#FFFFFF", borderRadius: 24, padding: 20, marginBottom: 16 },
+    scrollContent: { paddingBottom: 160, paddingTop: 16 },
+    section: { 
+        backgroundColor: COLOURS.white, 
+        borderRadius: 24, 
+        padding: 20, 
+        marginBottom: 8,        
+        borderWidth: 1,          
+        borderColor: COLOURS.Gray, 
+    },
+    innerPasswordBox: {
+        borderWidth: 1,
+        borderColor: 'transparent', 
+        borderRadius: 20,
+        paddingHorizontal: 16,
+        paddingTop: 4,  
+        marginTop: -6, 
+        marginHorizontal: -16, 
+        zIndex: 1,
+        elevation: 1,
+    },
+    innerPasswordBoxEditing: {
+        borderColor: COLOURS.Plum, 
+    }
 });

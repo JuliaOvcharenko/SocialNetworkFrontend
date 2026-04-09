@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { COLOURS } from "@shared/constants/colours";
-import { IMAGES } from "@shared/ui/images"; 
+import { IMAGES } from "@shared/ui/images";
+import { Button } from "@shared/ui/button";
 
 interface SectionHeaderProps {
     title: string;
@@ -13,13 +14,21 @@ export function SectionHeader({ title, isEditing, onEditPress }: SectionHeaderPr
     return (
         <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{title}</Text>
-            <TouchableOpacity style={styles.editCircle} onPress={onEditPress}>
-                {isEditing ? (
-                    <Text style={{ color: COLOURS.darkBlue, fontSize: 18 }}>✓</Text>
-                ) : (
-                    <IMAGES.PenButton />
-                )}
-            </TouchableOpacity>
+
+            {isEditing ? (
+                <Button
+                    variant="secondary"
+                    title="Зберегти"
+                    icon={<IMAGES.PenButton style={{ width: 20, height: 20 }} />}
+                    onPress={onEditPress}
+                />
+            ) : (
+                <Button
+                    variant="iconCircular"
+                    icon={<IMAGES.PenButton style={{ width: 20, height: 20 }} />}
+                    onPress={onEditPress}
+                />
+            )}
         </View>
     );
 }
@@ -29,20 +38,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 16,
     },
     sectionTitle: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: 500,
         color: COLOURS.darkBlue,
-    },
-    editCircle: {
-        width: 40,         
-        height: 40,        
-        borderRadius: 20,  
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        alignItems: 'center',
-        justifyContent: 'center',
     },
 });

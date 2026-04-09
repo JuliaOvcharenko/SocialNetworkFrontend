@@ -8,4 +8,7 @@ export const COLOURS = {
     Plum50: "#E9E5EE",
     Green100: "#22C55E",
     Black: "#000000",
+    Gray: "#CDCED2",
+    Gray50: "#81818D",
+    Red: "#FF4D4D",
 };

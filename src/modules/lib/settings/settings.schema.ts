@@ -2,6 +2,10 @@ import * as yup from 'yup';
 
 
 export const settingsSchema = yup.object().shape({
+
+    authorFullName: yup.string().required("Введіть ПІБ автора"),
+    username: yup.string().required("Введіть username користувача"),
+
     firstName: yup.string()
         .required("Введіть ім'я")
         .min(3, "Мінімум 3 символи"),        
@@ -18,6 +22,10 @@ export const settingsSchema = yup.object().shape({
     password: yup.string()
         .min(6, "Пароль має бути від 6 символів")
         .required("Введіть пароль"),
+    
+    confirmPassword: yup.string()
+        .oneOf([yup.ref('password')], 'Паролі не збігаються')
+        .required('Підтвердіть пароль'),
 });
 
 export type SettingsFormData = yup.InferType<typeof settingsSchema>;

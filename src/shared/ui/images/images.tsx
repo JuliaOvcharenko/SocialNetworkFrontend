@@ -8,9 +8,11 @@ import { logoutButton } from "./_images/header/logout-button";
 import { settingsButton } from "./_images/header/settings-button";
 import { EyeClose } from "./_images/components/eye/eyeClose";
 import { EyeOpen } from "./_images/components/eye/eyeOpen";
-import { PenButton } from "./_images/buttons/penButton";
+import { PenButton } from "./_images/buttonIcons/penButton";
 import { CheckBoxFalse } from "./_images/checkBox/checkBoxFalse";
 import { CheckBoxTrue } from "./_images/checkBox/checkBoxTrue";
+import { PlusButton } from "./_images/buttonIcons/plusButton";
+import { GalleryButton } from "./_images/buttonIcons/galleryButton";
 
 export const IMAGES = {
     LogoImage,
@@ -25,5 +27,7 @@ export const IMAGES = {
     EyeClose,
     PenButton,
     CheckBoxFalse,
-    CheckBoxTrue
+    CheckBoxTrue,
+    PlusButton,
+    GalleryButton
 }
