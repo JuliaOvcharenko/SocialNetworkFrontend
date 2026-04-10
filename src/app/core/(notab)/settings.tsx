@@ -204,17 +204,15 @@ const styles = StyleSheet.create({
         borderColor: COLOURS.Gray, 
     },
     innerPasswordBox: {
-        borderWidth: 1,
-        borderColor: 'transparent', 
         borderRadius: 20,
         paddingHorizontal: 16,
-        paddingTop: 4,  
-        marginTop: -6, 
+        paddingTop: 8,
+        paddingBottom: 16,
         marginHorizontal: -16, 
-        zIndex: 1,
-        elevation: 1,
+        backgroundColor: COLOURS.white, 
     },
     innerPasswordBoxEditing: {
+        borderWidth: 1,
         borderColor: COLOURS.Plum, 
     }
 });

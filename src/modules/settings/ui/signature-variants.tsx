@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+
 import { COLOURS } from "@shared/constants/colours";
-import { IMAGES } from "@shared/ui/images";
+import { IMAGES } from "@shared/ui/images"; 
 import { Button } from "@shared/ui/button";
 
 interface CheckboxProps {
@@ -12,18 +13,19 @@ interface CheckboxProps {
     isEditing: boolean;
 }
 
-const Checkbox = ({ isSelected, label, onPress, isEditing }: CheckboxProps) => (
-    <TouchableOpacity
-        style={[styles.checkboxContainer, { opacity: isEditing ? 1 : 0.5 }]}
-        onPress={onPress}
+const CustomCheckboxRow = ({ isSelected, label, onPress, isEditing }: CheckboxProps) => (
+    <TouchableOpacity 
+        style={[styles.checkboxContainer, { opacity: isEditing ? 1 : 0.5 }]} 
+        onPress={onPress} 
         disabled={!isEditing}
         activeOpacity={0.7}
     >
-        {isSelected ? (
-            <IMAGES.CheckBoxTrue style={styles.icon} />
-        ) : (
-            <IMAGES.CheckBoxFalse style={styles.icon} />
-        )}
+        <View style={styles.customCheckboxFrame}>
+            {isSelected && (
+                <IMAGES.CheckBoxTrue style={styles.checkmarkIcon} />
+            )}
+        </View>
+        
         <Text style={styles.checkboxLabel}>
             {label}
         </Text>
@@ -41,13 +43,13 @@ interface SignatureVariantsProps {
     authorAlias: string;
 }
 
-export function SignatureVariants({
-    isEditing,
+export function SignatureVariants({ 
+    isEditing, 
     isAliasSelected,
     onAliasToggle,
     isElectronicSelected,
     onElectronicToggle,
-    signatureImageUri,
+    signatureImageUri, 
     onSignatureImageChange,
     authorAlias
 }: SignatureVariantsProps) {
@@ -56,7 +58,7 @@ export function SignatureVariants({
         if (!isEditing) return;
 
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
+            mediaTypes: ['images'], 
             allowsEditing: true,
             quality: 1,
         });
@@ -72,23 +74,23 @@ export function SignatureVariants({
     return (
         <View style={styles.container}>
             <View style={styles.variantBlock}>
-                <Checkbox
-                    isSelected={isAliasSelected}
-                    label="Псевдонім автора"
-                    onPress={onAliasToggle}
-                    isEditing={isEditing}
+                <CustomCheckboxRow 
+                    isSelected={isAliasSelected} 
+                    label="Псевдонім автора" 
+                    onPress={onAliasToggle} 
+                    isEditing={isEditing} 
                 />
                 <Text style={styles.aliasText}>{authorAlias}</Text>
             </View>
 
             <View style={styles.variantBlock}>
-                <Checkbox
-                    isSelected={isElectronicSelected}
-                    label="Мій електронний підпис"
-                    onPress={onElectronicToggle}
-                    isEditing={isEditing}
+                <CustomCheckboxRow 
+                    isSelected={isElectronicSelected} 
+                    label="Мій електронний підпис" 
+                    onPress={onElectronicToggle} 
+                    isEditing={isEditing} 
                 />
-
+                
                 {isEditing ? (
                     <View>
                         <View style={styles.dashedContainer}>
@@ -98,15 +100,15 @@ export function SignatureVariants({
                                 <Text style={styles.placeholderText}>Немає підпису</Text>
                             )}
                         </View>
-
+                        
                         <View style={styles.buttonWrapper}>
-                            <Button
-                                title="Редагувати підпис"
-                                onPress={pickSignatureImage}
-                                variant="outline"
+                            <Button 
+                                title="Редагувати підпис" 
+                                onPress={pickSignatureImage} 
+                                variant="outline" 
                             />
                         </View>
-
+                        
                     </View>
                 ) : (
                     <View style={styles.viewContainer}>
@@ -125,51 +127,63 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     variantBlock: {
-        marginBottom: 24,
+        marginBottom: 24, 
     },
     checkboxContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
+        marginBottom: 12, 
     },
-    icon: {
+    // Стили для пустой фиолетовой рамки
+    customCheckboxFrame: {
         width: 20,
         height: 20,
+        borderWidth: 2,
+        borderColor: COLOURS.Plum,
+        borderRadius: 4, 
+        justifyContent: 'center',
+        alignItems: 'center',
         marginRight: 10,
+        backgroundColor: 'transparent',
+    },
+    // Стили для галочки внутри рамки
+    checkmarkIcon: {
+        width: 14, 
+        height: 14,
     },
     checkboxLabel: {
-        fontSize: 16,
-        fontWeight: '500',
-        color: COLOURS.Plum,
+        fontSize: 16, 
+        fontWeight: '500', 
+        color: COLOURS.Plum, 
     },
     aliasText: {
         fontSize: 16,
         fontWeight: '400',
-        color: COLOURS.darkBlue,
-        marginLeft: 30,
+        color: COLOURS.darkBlue, 
+        marginLeft: 34,
     },
     signatureImage: {
         width: '100%',
         height: 60,
     },
     viewContainer: {
-        paddingLeft: 30,
+        paddingLeft: 34, 
     },
     dashedContainer: {
         width: '100%',
         height: 80,
         borderWidth: 1,
-        borderColor: COLOURS.Gray,
+        borderColor: COLOURS.Gray, 
         borderStyle: 'dashed',
         borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 8,
-        backgroundColor: COLOURS.white,
+        backgroundColor: COLOURS.white, 
     },
     placeholderText: {
         fontSize: 12,
-        color: COLOURS.Gray,
+        color: COLOURS.Gray, 
     },
     buttonWrapper: {
         marginTop: 16,
