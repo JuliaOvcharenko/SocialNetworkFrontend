@@ -30,14 +30,14 @@ export default function SettingsScreen() {
     const { control, trigger, formState: { errors }, watch } = useForm<SettingsFormData>({
         resolver: yupResolver(settingsSchema),
         defaultValues: {
-            authorFullName: 'Гость Користувач',
-            username: '@guest',
-            firstName: 'Гость',
-            lastName: 'Користувач',
+            authorFullName: 'Name Surname',
+            username: '@user1',
+            firstName: 'Name',
+            lastName: 'Surname',
             birthday: '01.01.2000',
-            email: 'guest@example.com',
-            password: 'guest1234',
-            confirmPassword: 'guest1234',
+            email: 'user@example.com',
+            password: '12345678',
+            confirmPassword: '12345678',
         }
     });
 

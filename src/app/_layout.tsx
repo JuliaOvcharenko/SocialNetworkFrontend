@@ -4,6 +4,8 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { ApiProvider } from "@reduxjs/toolkit/query/react";
+import { baseApi } from "@shared/api/baseApi";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -22,11 +24,13 @@ export default function RootLayout() {
     if (!loaded) return null;
 
     return (
-        <SafeAreaProvider>
-            <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
-                <StatusBar style="dark" />
-                <Stack screenOptions={{ headerShown: false, animation: 'none' }} />
-            </SafeAreaView>
-        </SafeAreaProvider>
+        <ApiProvider api={baseApi}>
+            <SafeAreaProvider>
+                <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+                    <StatusBar style="dark" />
+                    <Stack screenOptions={{ headerShown: false, animation: 'none' }} />
+                </SafeAreaView>
+            </SafeAreaProvider>
+        </ApiProvider>
     );
 }

@@ -8,3 +8,7 @@ export interface RegisterFormFields {
     password: string;
     confirmPassword: string;
 }
+
+export interface VerifyFormFields {
+    numberBlock: string
+}
