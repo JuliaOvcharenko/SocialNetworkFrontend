@@ -1,7 +1,7 @@
 import { COLOURS } from "@shared/constants/colours";
 import { Header } from "@shared/ui/header/header";
-import { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -14,7 +14,14 @@ import { PersonalDataForm } from "@modules/settings/ui/personal-data-form";
 import { SignatureVariants } from "@modules/settings/ui/signature-variants";
 import { PasswordForm } from "@modules/settings/ui/password-form";
 
+// хуки для получения профиля и загрузки аватарки
+import { useGetMeQuery, useUploadAvatarMutation } from "@modules/auth/api/user-api";
+
 export default function SettingsScreen() {
+    // достаем мутацию
+    const { data: user, isLoading: isUserLoading } = useGetMeQuery();
+    const [uploadAvatar] = useUploadAvatarMutation();
+
     const [activeTab, setActiveTab] = useState<"personal" | "albums">("personal");
     const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
@@ -27,28 +34,56 @@ export default function SettingsScreen() {
     const [isElectronicSelected, setIsElectronicSelected] = useState(true);
     const [signatureImage, setSignatureImage] = useState<string | null>(null);
 
-    const { control, trigger, formState: { errors }, watch } = useForm<SettingsFormData>({
+    // Достали функцию reset из формы
+    const { control, trigger, formState: { errors }, watch, reset } = useForm<SettingsFormData>({
         resolver: yupResolver(settingsSchema),
         defaultValues: {
-            authorFullName: 'Name Surname',
-            username: '@user1',
-            firstName: 'Name',
-            lastName: 'Surname',
-            birthday: '01.01.2000',
-            email: 'user@example.com',
-            password: '12345678',
-            confirmPassword: '12345678',
+            authorFullName: '',
+            username: '',
+            firstName: '',
+            lastName: '',
+            birthday: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
         }
     });
+
+    //приходят данные юзера, обновляется форма
+    useEffect(() => {
+        if (user) {
+            reset({
+                firstName: user.name || '',
+                lastName: user.surname || '',
+                email: user.email || '',
+                authorFullName: user.authorAlias || `${user.name || ''} ${user.surname || ''}`.trim() || 'Користувач',
+                username: user.nickname ? `@${user.nickname}` : `@user${user.id || ''}`, 
+                birthday: user.birthDate || '', 
+                password: '', 
+                confirmPassword: '',
+            });
+
+            //Обработка массива аватарок
+            if (user.avatars && user.avatars.length > 0) {
+                const mainAvatar = user.avatars.find(a => a.isMain);
+                if (mainAvatar) {
+                    // const BASE_URL = 'http://192.168.0.225:8001'; 
+                    const BASE_URL = 'http://localhost:8001';
+                    setAvatarUri(`${BASE_URL}${mainAvatar.url}`);
+                }
+            }
+        }
+    }, [user, reset]);
 
     const currentFirstName = watch("firstName");
     const currentLastName = watch("lastName");
     const currentUsername = watch("username");
     const currentFullName = `${currentFirstName || ''} ${currentLastName || ''}`.trim();
 
+    // функция загрузки картинки на бэкенд
     const pickAvatarImage = async () => {
         if (!isEditingProfile) return;
-
+        
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
             allowsEditing: true,
@@ -56,7 +91,33 @@ export default function SettingsScreen() {
             quality: 1,
         });
 
-        if (!result.canceled) setAvatarUri(result.assets[0].uri);
+        if (!result.canceled) {
+            const imageUri = result.assets[0].uri;
+            
+            // Показываем фотку мгновенно в UI
+            setAvatarUri(imageUri);
+
+            // Готовим файл
+            const filename = imageUri.split('/').pop() || 'avatar.jpg';
+            const match = /\.(\w+)$/.exec(filename);
+            const type = match ? `image/${match[1]}` : `image/jpeg`;
+
+            const formData = new FormData();
+            // @ts-ignore
+            formData.append('avatar', {
+                uri: imageUri,
+                name: filename,
+                type: type,
+            });
+
+            // Отправка на бек
+            try {
+                await uploadAvatar(formData).unwrap();
+                console.log("Аватарка успішно завантажена!");
+            } catch (error) {
+                console.error("Помилка при завантаженні аватарки:", error);
+            }
+        }
     };
 
     const handleProfileEditToggle = async () => {
@@ -83,6 +144,15 @@ export default function SettingsScreen() {
     const handleSignatureEditToggle = () => {
         setIsEditingSignature(!isEditingSignature);
     };
+
+    // крутилка загрузки, пока ждем ответ от бэкенда
+    if (isUserLoading) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color={COLOURS.Plum} />
+            </View>
+        );
+    }
 
     return (
         <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>

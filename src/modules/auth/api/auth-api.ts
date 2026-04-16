@@ -4,7 +4,7 @@ import { RegPayload, VerifyDTO } from "./api.types";
 
 export const authApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
-		register: builder.mutation<{ message: string }, RegPayload>({
+		register: builder.mutation<{ message: string; token: string }, RegPayload>({
 			query: (credentials) => ({
 				url: "users/register",
 				method: "POST",

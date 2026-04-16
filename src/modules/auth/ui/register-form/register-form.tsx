@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Alert } from 'react-native';
+import { View, Text } from 'react-native'; // Убрали Alert, добавили Text
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Input } from '@shared/ui/input/input';
@@ -9,14 +9,14 @@ import { registerValidator } from '@modules/lib/login/register.schema';
 import { styles } from './register-form.styles';
 import { useRegisterMutation } from '@modules/auth/api/auth-api';
 import { useRouter } from 'expo-router';
-
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export function RegisterForm() {
-    const router = useRouter()
+    const router = useRouter();
     const [register, { isLoading }] = useRegisterMutation();
 
-    const { control, handleSubmit } = useForm<RegisterFormFields>({
+    // Достаем formState: { errors } для отображения корневой ошибки
+    const { control, handleSubmit, setError, formState: { errors } } = useForm<RegisterFormFields>({
         resolver: yupResolver(registerValidator),
         defaultValues: {
             email: '',
@@ -27,10 +27,12 @@ export function RegisterForm() {
 
     const onSubmit = async (data: RegisterFormFields) => {
         try {
-            await register({ 
+            const response = await register({ 
                 email: data.email, 
                 password: data.password 
             }).unwrap();
+
+            await AsyncStorage.setItem("token", response.token);
 
             router.push({
                 pathname: "/verify", 
@@ -39,7 +41,23 @@ export function RegisterForm() {
 
         } catch (err: any) {
             console.log('FULL ERROR:', JSON.stringify(err, null, 2));
-            Alert.alert('Помилка', err.data?.message || 'Помилка при реєстрації');
+            
+            const serverMessage = err.data?.message || 'Помилка при реєстрації. Спробуйте ще раз.';
+
+            // Проверяем на занятую почту
+            if (serverMessage.toLowerCase().includes('user') || serverMessage.toLowerCase().includes('email')) {
+                // Ошибка конкретного поля
+                setError('email', { 
+                    type: 'server', 
+                    message: 'Користувач з такою поштою вже існує' 
+                });
+            } else {
+                // иная ошибка сервера уходит в root
+                setError('root', { 
+                    type: 'server', 
+                    message: serverMessage 
+                });
+            }
         }
     };
 
@@ -93,6 +111,13 @@ export function RegisterForm() {
                     />
                 )}
             />
+
+            {/* блок для вывода неизвестных ошибок сервера над кнопкой */}
+            {errors.root && (
+                <Text style={{ color: '#FF3B30', textAlign: 'center', marginBottom: 12, fontSize: 14 }}>
+                    {errors.root.message}
+                </Text>
+            )}
 
             <Button
                 title={isLoading ? "Створення..." : "Створити акаунт"}
