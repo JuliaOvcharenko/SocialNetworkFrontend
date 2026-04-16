@@ -6,13 +6,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as ImagePicker from 'expo-image-picker';
-
 import { settingsSchema, SettingsFormData } from "@modules/lib/settings/settings.schema";
 import { SectionHeader } from "@modules/settings/ui/section-header";
 import { ProfileCard } from "@modules/settings/ui/profile-card";
 import { PersonalDataForm } from "@modules/settings/ui/personal-data-form";
 import { SignatureVariants } from "@modules/settings/ui/signature-variants";
 import { PasswordForm } from "@modules/settings/ui/password-form";
+import { useRouter } from "expo-router";
+
 
 export default function SettingsScreen() {
     const [activeTab, setActiveTab] = useState<"personal" | "albums">("personal");
@@ -26,6 +27,7 @@ export default function SettingsScreen() {
     const [isAliasSelected, setIsAliasSelected] = useState(true);
     const [isElectronicSelected, setIsElectronicSelected] = useState(true);
     const [signatureImage, setSignatureImage] = useState<string | null>(null);
+    const Router = useRouter();
 
     const { control, trigger, formState: { errors }, watch } = useForm<SettingsFormData>({
         resolver: yupResolver(settingsSchema),
@@ -94,7 +96,7 @@ export default function SettingsScreen() {
                         <Text style={[styles.tabText, activeTab === "personal" && styles.tabTextActive]}>Особиста інформація</Text>
                         {activeTab === "personal" && <View style={styles.indicator} />}
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.tab} onPress={() => setActiveTab("albums")}>
+                    <TouchableOpacity style={styles.tab} onPress={() => Router.push('/core/albums')}>
                         <Text style={[styles.tabText, activeTab === "albums" && styles.tabTextActive]}>Альбоми</Text>
                         {activeTab === "albums" && <View style={styles.indicator} />}
                     </TouchableOpacity>
@@ -159,7 +161,6 @@ export default function SettingsScreen() {
                         </ScrollView>
                     </KeyboardAvoidingView>
                 )}
-                {activeTab === "albums" && <View style={styles.content}><Text>Тут будуть Альбоми</Text></View>}
             </View>
         </SafeAreaView>
     );
@@ -195,24 +196,24 @@ const styles = StyleSheet.create({
     },
     content: { flex: 1, padding: 16 },
     scrollContent: { paddingBottom: 160, paddingTop: 16 },
-    section: { 
-        backgroundColor: COLOURS.white, 
-        borderRadius: 24, 
-        padding: 20, 
-        marginBottom: 8,        
-        borderWidth: 1,          
-        borderColor: COLOURS.Gray, 
+    section: {
+        backgroundColor: COLOURS.white,
+        borderRadius: 24,
+        padding: 20,
+        marginBottom: 8,
+        borderWidth: 1,
+        borderColor: COLOURS.Gray,
     },
     innerPasswordBox: {
         borderRadius: 20,
         paddingHorizontal: 16,
         paddingTop: 8,
         paddingBottom: 16,
-        marginHorizontal: -16, 
-        backgroundColor: COLOURS.white, 
+        marginHorizontal: -16,
+        backgroundColor: COLOURS.white,
     },
     innerPasswordBoxEditing: {
         borderWidth: 1,
-        borderColor: COLOURS.Plum, 
+        borderColor: COLOURS.Plum,
     }
 });

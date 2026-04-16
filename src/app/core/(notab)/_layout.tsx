@@ -1,12 +1,12 @@
 import { Footer } from '@shared/ui/footer';
-import { Slot } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
+import { Stack } from 'expo-router';
 
 export default function NoTabLayout() {
     return (
         <View style={styles.container}>
             <View style={styles.content}>
-                <Slot />
+                <Stack screenOptions={{ headerShown: false, animation: 'none' }} />
             </View>
             <View style={styles.footerWrapper}>
                 <Footer />

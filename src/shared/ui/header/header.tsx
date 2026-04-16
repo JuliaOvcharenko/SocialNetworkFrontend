@@ -17,7 +17,7 @@ export function Header(props: HeaderProps) {
 
             <View style={styles.headerButtons}>
                 {showCreateButton && (
-                    <IMAGES.addPostButton style={{ width: 40, height: 40 }}/>
+                    <IMAGES.AddPostButton style={{ width: 40, height: 40 }}/>
                 )}
                 {showSettingsButton && (
                     <TouchableOpacity onPress={() => router.push('core/settings')}>
