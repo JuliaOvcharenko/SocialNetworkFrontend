@@ -42,6 +42,7 @@ export function PasswordForm({ control, errors, isEditing }: PasswordFormProps) 
                             value={value}
                             error={errors.confirmPassword?.message}
                             isPassword={true}
+                            
                         />
                     )}
                 />

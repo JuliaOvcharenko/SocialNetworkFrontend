@@ -14,7 +14,7 @@ export interface LoginPayload {
 }
 
 export interface VerifyDTO{
-    code: number;
+    code: string;
 }
 
 export interface LoginResponce {
@@ -22,15 +22,27 @@ export interface LoginResponce {
 }
 
 export interface User {
-	email: string;
-	name: string;
-	surname: string;
-	nickname: string;
-	id: number;
-	avatar: string;
-	lastSeenAt: Date;
-	createdAt: Date;
-	updatedAt: Date;
+    id: number;
+    email: string;
+    
+    name: string | null;
+    surname: string | null;
+    nickname: string | null;
+    
+
+    authorAlias: string | null; 
+    birthDate: string | null; 
+    
+
+    avatars: { 
+        id: number; 
+        url: string; 
+        isMain: boolean; 
+    }[]; 
+    
+    lastSeenAt: Date | string;
+    createdAt: Date | string;
+    updatedAt: Date | string;
 }
 
 export type MeResponse = User

@@ -5,13 +5,18 @@ import { NumberButton } from '@shared/ui/numberButton';
 import { styles } from './verify-form.styles';
 import { useVerifyMutation } from '@modules/auth/api/auth-api';
 import { verifyValidator } from '@modules/lib/login/verify.schema';
+import { useRouter } from 'expo-router'; // Импортируем роутер
 
 export function VerifyForm({ onBack }: { onBack?: () => void }) {
     const [code, setCode] = useState('');
     const [error, setError] = useState('');
+    const [isSuccess, setIsSuccess] = useState(false); // Флаг успешной отправки
     const [verify, { isLoading }] = useVerifyMutation();
+    const router = useRouter(); // Инициализируем роутер
 
     const onSubmit = async () => {
+        if (isSuccess) return; // Блокируем, если уже успешно подтвердили
+
         try {
             await verifyValidator.validate({ code });
             setError('');
@@ -21,10 +26,11 @@ export function VerifyForm({ onBack }: { onBack?: () => void }) {
         }
 
         try {
-            await verify({ code: Number(code) }).unwrap();
-            Alert.alert('Успіх', 'Код успішно підтверджено!');
+            await verify({ code }).unwrap();
+            setIsSuccess(true); // Ставим флаг успеха, чтобы заблокировать форму
         } catch (err: any) {
-            Alert.alert('Помилка', err.data?.message || 'Невірний код');
+            // Выводим ошибку с бэкенда красным текстом прямо под инпутом
+            setError(err.data?.message || 'Невірний код. Спробуйте ще раз.');
         }
     };
 
@@ -43,13 +49,17 @@ export function VerifyForm({ onBack }: { onBack?: () => void }) {
 
                 <Text style={styles.label}>Код підтвердження</Text>
                 <NumberButton onComplete={(val) => { setCode(val); setError(''); }} />
+                
+                {/* Теперь ошибка будет красиво светиться здесь */}
                 {error ? <Text style={styles.error}>{error}</Text> : null}
 
                 <Button
-                    title={isLoading ? 'Перевірка...' : 'Підтвердити'}
+                    // Меняем текст кнопки, если всё прошло успешно
+                    title={isLoading ? 'Перевірка...' : isSuccess ? 'Підтверджено' : 'Підтвердити'}
                     onPress={onSubmit}
                     style={styles.submitButton}
-                    disabled={isLoading}
+                    // Блокируем кнопку во время загрузки ИЛИ если уже успешно
+                    disabled={isLoading || isSuccess} 
                 />
 
                 <TouchableOpacity onPress={onBack} activeOpacity={0.7}>
