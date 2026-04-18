@@ -1,18 +1,16 @@
 import * as yup from 'yup';
 
-
 export const settingsSchema = yup.object().shape({
+    authorAlias: yup.string().required("Введіть ПІБ автора"),
+    nickname: yup.string().required("Введіть нікнейм користувача"),
 
-    authorFullName: yup.string().required("Введіть ПІБ автора"),
-    username: yup.string().required("Введіть username користувача"),
-
-    firstName: yup.string()
+    name: yup.string()
         .required("Введіть ім'я")
         .min(3, "Мінімум 3 символи"),        
-    lastName: yup.string()
+    surname: yup.string()
         .required("Введіть прізвище")
         .min(3, "Мінімум 3 символи"),        
-    birthday: yup.string()
+    birthDate: yup.string()
         .required("Введіть дату народження"), 
         
     email: yup.string()
@@ -20,12 +18,14 @@ export const settingsSchema = yup.object().shape({
         .required("Введіть електронну адресу"),
         
     password: yup.string()
-        .min(6, "Пароль має бути від 6 символів")
-        .required("Введіть пароль"),
+        .default('')
+        .test('is-length', 'Пароль має бути від 6 символів', val => !val || val.length >= 6),
     
     confirmPassword: yup.string()
-        .oneOf([yup.ref('password')], 'Паролі не збігаються')
-        .required('Підтвердіть пароль'),
+        .default('')
+        .test('match', 'Паролі не збігаються', function(val) {
+            return !val || val === this.parent.password;
+        }),
 });
 
 export type SettingsFormData = yup.InferType<typeof settingsSchema>;

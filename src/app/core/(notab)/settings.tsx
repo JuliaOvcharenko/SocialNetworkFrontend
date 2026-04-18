@@ -14,16 +14,16 @@ import { PersonalDataForm } from "@modules/settings/ui/personal-data-form";
 import { SignatureVariants } from "@modules/settings/ui/signature-variants";
 import { PasswordForm } from "@modules/settings/ui/password-form";
 
-// хуки для получения профиля и загрузки аватарки
 import { useGetMeQuery, useUploadAvatarMutation } from "@modules/auth/api/user-api";
+import { BASE_URL } from "@shared/config/api.config";
 
 export default function SettingsScreen() {
-    // достаем мутацию
     const { data: user, isLoading: isUserLoading } = useGetMeQuery();
-    const [uploadAvatar] = useUploadAvatarMutation();
+    const [uploadAvatar, { isLoading: isUploading }] = useUploadAvatarMutation();
 
     const [activeTab, setActiveTab] = useState<"personal" | "albums">("personal");
     const [avatarUri, setAvatarUri] = useState<string | null>(null);
+
 
     const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [isEditingPersonal, setIsEditingPersonal] = useState(false);
@@ -34,102 +34,104 @@ export default function SettingsScreen() {
     const [isElectronicSelected, setIsElectronicSelected] = useState(true);
     const [signatureImage, setSignatureImage] = useState<string | null>(null);
 
-    // Достали функцию reset из формы
+    const [activeIndex, setActiveIndex] = useState(0);
+
     const { control, trigger, formState: { errors }, watch, reset } = useForm<SettingsFormData>({
         resolver: yupResolver(settingsSchema),
         defaultValues: {
-            authorFullName: '',
-            username: '',
-            firstName: '',
-            lastName: '',
-            birthday: '',
+            name: '',
+            surname: '',
+            nickname: '',
+            authorAlias: '',
+            birthDate: '',
             email: '',
             password: '',
             confirmPassword: '',
         }
     });
 
-    //приходят данные юзера, обновляется форма
     useEffect(() => {
         if (user) {
             reset({
-                firstName: user.name || '',
-                lastName: user.surname || '',
+                name: user.name || '',
+                surname: user.surname || '',
                 email: user.email || '',
-                authorFullName: user.authorAlias || `${user.name || ''} ${user.surname || ''}`.trim() || 'Користувач',
-                username: user.nickname ? `@${user.nickname}` : `@user${user.id || ''}`, 
-                birthday: user.birthDate || '', 
-                password: '', 
-                confirmPassword: '',
+                authorAlias: user.authorAlias || `${user.name || ''} ${user.surname || ''}`.trim() || '',
+                nickname: user.nickname ? (user.nickname.startsWith('@') ? user.nickname : `@${user.nickname}`) : '',
+                birthDate: user.birthDate || '',
+                password: '*********',
             });
 
-            //Обработка массива аватарок
             if (user.avatars && user.avatars.length > 0) {
-                const mainAvatar = user.avatars.find(a => a.isMain);
+                const mainAvatar = user.avatars.find(a => a.isActive);
                 if (mainAvatar) {
-                    // const BASE_URL = 'http://192.168.0.225:8001'; 
-                    const BASE_URL = 'http://localhost:8001';
-                    setAvatarUri(`${BASE_URL}${mainAvatar.url}`);
+                    setAvatarUri(`${BASE_URL}${mainAvatar.image.shakalImageURL}`);
                 }
             }
         }
     }, [user, reset]);
 
-    const currentFirstName = watch("firstName");
-    const currentLastName = watch("lastName");
-    const currentUsername = watch("username");
-    const currentFullName = `${currentFirstName || ''} ${currentLastName || ''}`.trim();
+    const currentAuthorFullName = watch("authorAlias");
 
-    // функция загрузки картинки на бэкенд
-    const pickAvatarImage = async () => {
-        if (!isEditingProfile) return;
-        
-        let result = await ImagePicker.launchImageLibraryAsync({
+    const pickAvatarImage = async (isReplace: boolean, avatarId?: number) => {
+        if (!isEditingProfile || isUploading) return;
+
+        const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [1, 1],
             quality: 1,
         });
 
-        if (!result.canceled) {
-            const imageUri = result.assets[0].uri;
-            
-            // Показываем фотку мгновенно в UI
-            setAvatarUri(imageUri);
+        if (result.canceled || !result.assets) return;
 
-            // Готовим файл
-            const filename = imageUri.split('/').pop() || 'avatar.jpg';
-            const match = /\.(\w+)$/.exec(filename);
-            const type = match ? `image/${match[1]}` : `image/jpeg`;
+        const imageUri = result.assets[0].uri;
+        const fileUri = Platform.OS === 'ios' ? imageUri.replace('file://', '') : imageUri;
+        const filename = imageUri.split('/').pop() || 'avatar.jpg';
 
-            const formData = new FormData();
-            // @ts-ignore
-            formData.append('avatar', {
-                uri: imageUri,
-                name: filename,
-                type: type,
-            });
+        const formData = new FormData();
 
-            // Отправка на бек
-            try {
-                await uploadAvatar(formData).unwrap();
-                console.log("Аватарка успішно завантажена!");
-            } catch (error) {
-                console.error("Помилка при завантаженні аватарки:", error);
-            }
+        const fileToUpload = {
+            uri: fileUri,
+            name: filename,
+            type: 'image/jpeg',
+        };
+
+        // @ts-ignore
+        formData.append('avatar', fileToUpload);
+
+        if (isReplace && avatarId) {
+            formData.append('avatarId', String(avatarId));
+        }
+
+        try {
+            await uploadAvatar({
+                formData,
+                isMain: !isReplace
+            }).unwrap();
+        } catch (e) {
+            console.error("Помилка завантаження:", e);
         }
     };
 
+    const handleReplacePhoto = () => {
+        if (isUploading) return;
+
+        const currentAvatarId = user?.avatars?.[activeIndex]?.id;
+        if (currentAvatarId) {
+            pickAvatarImage(true, currentAvatarId);
+        }
+    };
     const handleProfileEditToggle = async () => {
         if (isEditingProfile) {
-            const isValid = await trigger(["authorFullName", "username"]);
+            const isValid = await trigger(["authorAlias", "nickname"]);
             if (isValid) setIsEditingProfile(false);
         } else setIsEditingProfile(true);
     };
 
     const handlePersonalEditToggle = async () => {
         if (isEditingPersonal) {
-            const isValid = await trigger(["firstName", "lastName", "birthday", "email"]);
+            const isValid = await trigger(["name", "surname", "birthDate", "email"]);
             if (isValid) setIsEditingPersonal(false);
         } else setIsEditingPersonal(true);
     };
@@ -145,7 +147,6 @@ export default function SettingsScreen() {
         setIsEditingSignature(!isEditingSignature);
     };
 
-    // крутилка загрузки, пока ждем ответ от бэкенда
     if (isUserLoading) {
         return (
             <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -181,12 +182,17 @@ export default function SettingsScreen() {
                                     onEditPress={handleProfileEditToggle}
                                 />
                                 <ProfileCard
-                                    avatarUri={avatarUri}
-                                    onAvatarPress={pickAvatarImage}
+                                    avatars={user?.avatars || []}
+                                    onIndexChange={(index) => setActiveIndex(index)}
+
+                                    onAddPhoto={() => pickAvatarImage(false)}
+                                    onReplacePhoto={handleReplacePhoto}
+
                                     control={control}
                                     isEditing={isEditingProfile}
-                                    authorFullName={currentFullName || "Ім'я не вказано"}
-                                    usernameView={currentUsername || "@username"}
+                                    authorFullName={
+                                        user?.authorAlias ? user?.authorAlias : `@${user?.nickname}`
+                                    } usernameView={user?.nickname ? `@${user?.nickname}` : ""}
                                 />
                             </View>
 
@@ -222,7 +228,7 @@ export default function SettingsScreen() {
                                     onElectronicToggle={() => setIsElectronicSelected(!isElectronicSelected)}
                                     signatureImageUri={signatureImage}
                                     onSignatureImageChange={setSignatureImage}
-                                    authorAlias={currentFullName || "Ім'я не вказано"}
+                                    authorAlias={currentAuthorFullName || "Ім'я не вказано"}
                                 />
                             </View>
 
@@ -265,24 +271,24 @@ const styles = StyleSheet.create({
     },
     content: { flex: 1, padding: 16 },
     scrollContent: { paddingBottom: 160, paddingTop: 16 },
-    section: { 
-        backgroundColor: COLOURS.white, 
-        borderRadius: 24, 
-        padding: 20, 
-        marginBottom: 8,        
-        borderWidth: 1,          
-        borderColor: COLOURS.Gray, 
+    section: {
+        backgroundColor: COLOURS.white,
+        borderRadius: 24,
+        padding: 20,
+        marginBottom: 8,
+        borderWidth: 1,
+        borderColor: COLOURS.Gray,
     },
     innerPasswordBox: {
         borderRadius: 20,
         paddingHorizontal: 16,
         paddingTop: 8,
         paddingBottom: 16,
-        marginHorizontal: -16, 
-        backgroundColor: COLOURS.white, 
+        marginHorizontal: -16,
+        backgroundColor: COLOURS.white,
     },
     innerPasswordBoxEditing: {
         borderWidth: 1,
-        borderColor: COLOURS.Plum, 
+        borderColor: COLOURS.Plum,
     }
 });

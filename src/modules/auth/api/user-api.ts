@@ -7,17 +7,29 @@ export const userProfileApi = baseApi.injectEndpoints({
             query: () => "users/me",
             providesTags: ["User"],
         }),
-        
-        //мутация для загрузки аватарки
-        uploadAvatar: builder.mutation<{ avatar: string }, FormData>({
-            query: (formData) => ({
-                url: "users/avatar", 
+
+        uploadAvatar: builder.mutation<{ avatar: string }, { formData: FormData; isMain: boolean }>({
+            query: ({ formData, isMain }) => ({
+                url: `users/avatar?isMain=${isMain}`,
                 method: "POST",
                 body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                }
             }),
-            invalidatesTags: ["User"], 
+            invalidatesTags: ["User"],
+        }),
+
+        updateProfile: builder.mutation<User, Partial<User>>({
+            query: (body) => ({
+                url: "users/me",
+                method: "PATCH",
+                body: body,
+            }),
+            invalidatesTags: ["User"],
         }),
     }),
+    overrideExisting: true,
 });
 
-export const { useGetMeQuery, useUploadAvatarMutation } = userProfileApi;
+export const { useGetMeQuery, useUploadAvatarMutation, useUpdateProfileMutation } = userProfileApi;
