@@ -6,11 +6,14 @@ import { useRouter } from "expo-router";
 import { GalleryButton } from "@shared/ui/images/_images/buttonIcons/galleryButton";
 import { AddPostButton } from "@shared/ui/images/_images/header/add-post-button";
 import { Image } from "expo-image";
+import { useState } from "react";
+import { CreateAlbumModal } from "@modules/settings/ui/create-album-modal";
 
 
 
 export default function AlbumsScreen() {
     const router = useRouter();
+    const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 
     return (
         <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
@@ -33,7 +36,7 @@ export default function AlbumsScreen() {
                         <View style={styles.sectionHeader}>
                             <Text style={styles.sectionTitle}>Мої фото</Text>
                             <TouchableOpacity style={styles.addButton}>
-                                <GalleryButton style={styles.addButtonIcon}></GalleryButton>
+                                <GalleryButton style={styles.addButtonIcon} />
                                 <Text style={styles.addButtonText}>Додати фото</Text>
                             </TouchableOpacity>
                         </View>
@@ -45,13 +48,21 @@ export default function AlbumsScreen() {
                     <View style={styles.section}>
                         <View style={styles.emptyAlbum}>
                             <Text style={styles.emptyText}>Немає ще жодного альбому</Text>
-                            <TouchableOpacity>
+                            <TouchableOpacity onPress={() => setIsCreateModalVisible(true)}>
                                 <AddPostButton style={{ width: 32, height: 32 }} />
                             </TouchableOpacity>
                         </View>
                     </View>
 
                 </ScrollView>
+                <CreateAlbumModal 
+                    isVisible={isCreateModalVisible}
+                    onClose={() => setIsCreateModalVisible(false)}
+                    onSave={(data) => {
+                        console.log("Данные альбома:", data);
+                        setIsCreateModalVisible(false);
+                }}
+            />
             </View>
         </SafeAreaView>
     );

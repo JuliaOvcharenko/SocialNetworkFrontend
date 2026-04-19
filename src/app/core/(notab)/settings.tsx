@@ -15,11 +15,9 @@ import { PasswordForm } from "@modules/settings/ui/password-form";
 import { useRouter } from "expo-router";
 
 
-// хуки для получения профиля и загрузки аватарки
 import { useGetMeQuery, useUploadAvatarMutation } from "@modules/auth/api/user-api";
 
 export default function SettingsScreen() {
-    // достаем мутацию
     const { data: user, isLoading: isUserLoading } = useGetMeQuery();
     const [uploadAvatar] = useUploadAvatarMutation();
 
@@ -47,7 +45,7 @@ export default function SettingsScreen() {
             birthday: '',
             email: '',
             password: '',
-            confirmPassword: '',
+            confirmPassword: ''
         }
     });
 
@@ -70,7 +68,7 @@ export default function SettingsScreen() {
                 const mainAvatar = user.avatars.find(a => a.isMain);
                 if (mainAvatar) {
                     // const BASE_URL = 'http://192.168.0.225:8001'; 
-                    const BASE_URL = 'http://localhost:8001';
+                    const BASE_URL = 'http://192.168.0.225:8001/api/';
                     setAvatarUri(`${BASE_URL}${mainAvatar.url}`);
                 }
             }
@@ -82,7 +80,6 @@ export default function SettingsScreen() {
     const currentUsername = watch("username");
     const currentFullName = `${currentFirstName || ''} ${currentLastName || ''}`.trim();
 
-    // функция загрузки картинки на бэкенд
     const pickAvatarImage = async () => {
         if (!isEditingProfile) return;
         
@@ -96,23 +93,20 @@ export default function SettingsScreen() {
         if (!result.canceled) {
             const imageUri = result.assets[0].uri;
             
-            // Показываем фотку мгновенно в UI
             setAvatarUri(imageUri);
 
-            // Готовим файл
             const filename = imageUri.split('/').pop() || 'avatar.jpg';
             const match = /\.(\w+)$/.exec(filename);
             const type = match ? `image/${match[1]}` : `image/jpeg`;
 
             const formData = new FormData();
-            // @ts-ignore
+            
             formData.append('avatar', {
                 uri: imageUri,
                 name: filename,
                 type: type,
-            });
+            } as any);
 
-            // Отправка на бек
             try {
                 await uploadAvatar(formData).unwrap();
                 console.log("Аватарка успішно завантажена!");

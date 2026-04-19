@@ -15,7 +15,7 @@ export function VerifyForm({ onBack }: { onBack?: () => void }) {
     const router = useRouter(); // Инициализируем роутер
 
     const onSubmit = async () => {
-        if (isSuccess) return; // Блокируем, если уже успешно подтвердили
+        if (isSuccess) return; 
 
         try {
             await verifyValidator.validate({ code });
