@@ -18,7 +18,7 @@ export function FirstLoginModal({ isVisible, onClose, onSubmitSuccess }: FirstLo
         resolver: yupResolver(firstLoginSchema),
         defaultValues: {
             authorAlias: '',
-            username: '@',
+            nickname: '@',
         }
     });
 
@@ -64,7 +64,7 @@ export function FirstLoginModal({ isVisible, onClose, onSubmitSuccess }: FirstLo
 
                         <Controller
                             control={control}
-                            name="username"
+                            name="nickname"
                             render={({ field: { onChange, onBlur, value } }) => (
                                 <Input
                                     label="Ім'я користувача"
@@ -72,7 +72,7 @@ export function FirstLoginModal({ isVisible, onClose, onSubmitSuccess }: FirstLo
                                     onBlur={onBlur}
                                     onChangeText={onChange}
                                     value={value}
-                                    error={errors.username?.message}
+                                    error={errors.nickname?.message}
                                 />
                             )}
                         />

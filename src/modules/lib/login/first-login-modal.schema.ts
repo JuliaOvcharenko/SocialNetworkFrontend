@@ -7,7 +7,7 @@ export const firstLoginSchema = yup.object().shape({
         .required("Введіть псевдонім")
         .min(3, "Мінімум 3 символи"),
         
-    username: yup.string()
+    nickname: yup.string()
         .required("Введіть ім'я користувача")
         .matches(usernameRegex, "Має починатися з @ та містити від 3 англ. літер"),
 });

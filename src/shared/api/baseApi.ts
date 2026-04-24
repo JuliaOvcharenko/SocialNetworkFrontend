@@ -1,13 +1,13 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { queryBaseHeaders } from "./headers";
+import { API_URL } from "@shared/config/api.config";
 
 export const baseApi = createApi({
 	reducerPath: "api",
 	baseQuery: fetchBaseQuery({
-		baseUrl: "http://192.168.0.225:8001/api/",
+		baseUrl: API_URL,
 		prepareHeaders: queryBaseHeaders,
 	}),
 	tagTypes: ["User"],
 	endpoints: () => ({}),
 });
-//http://192.168.0.225:8001/api/

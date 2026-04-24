@@ -17,7 +17,7 @@ export interface VerifyDTO{
     code: string;
 }
 
-export interface LoginResponce {
+export interface LoginResponse {
 	token: string;
 }
 
@@ -36,9 +36,14 @@ export interface User {
 
     avatars: { 
         id: number; 
-        url: string; 
-        isMain: boolean; 
-    }[]; 
+        isActive: boolean; 
+        isShown: boolean;
+        image: { 
+            id: number;
+            shakalImageURL: string;
+            normalImageURL: string;
+        };
+    }[];
     
     lastSeenAt: Date | string;
     createdAt: Date | string;

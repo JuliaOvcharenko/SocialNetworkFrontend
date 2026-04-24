@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native'; // Убрали Alert, добавили Text
+import { View, Text } from 'react-native'; 
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Input } from '@shared/ui/input/input';
@@ -15,7 +15,7 @@ export function RegisterForm() {
     const router = useRouter();
     const [register, { isLoading }] = useRegisterMutation();
 
-    // Достаем formState: { errors } для отображения корневой ошибки
+
     const { control, handleSubmit, setError, formState: { errors } } = useForm<RegisterFormFields>({
         resolver: yupResolver(registerValidator),
         defaultValues: {
@@ -44,15 +44,15 @@ export function RegisterForm() {
             
             const serverMessage = err.data?.message || 'Помилка при реєстрації. Спробуйте ще раз.';
 
-            // Проверяем на занятую почту
+
             if (serverMessage.toLowerCase().includes('user') || serverMessage.toLowerCase().includes('email')) {
-                // Ошибка конкретного поля
+
                 setError('email', { 
                     type: 'server', 
                     message: 'Користувач з такою поштою вже існує' 
                 });
             } else {
-                // иная ошибка сервера уходит в root
+
                 setError('root', { 
                     type: 'server', 
                     message: serverMessage 
@@ -112,7 +112,6 @@ export function RegisterForm() {
                 )}
             />
 
-            {/* блок для вывода неизвестных ошибок сервера над кнопкой */}
             {errors.root && (
                 <Text style={{ color: '#FF3B30', textAlign: 'center', marginBottom: 12, fontSize: 14 }}>
                     {errors.root.message}

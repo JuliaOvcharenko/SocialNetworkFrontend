@@ -3,15 +3,30 @@ import { View } from 'react-native';
 
 import { FirstLoginModal } from '../../../modules/profile/ui/first-login-modal'; 
 import { Header } from '@shared/ui/header';
+import { FirstLoginFormData } from '@modules/lib/login/first-login-modal.schema';
+
+
+import { useUpdateProfileMutation } from "@modules/auth/api/user-api";
 
 export default function MainScreen() {
-    // щоб модалка одразу відкрилася при вході на екран
     const [isFirstLoginModalVisible, setFirstLoginModalVisible] = useState(true);
+    
+    const [updateProfile] = useUpdateProfileMutation(); 
 
-    // Функція, яка спрацює після успішної валідації і натискання "Продовжити"
-    const handleFirstLoginSubmit = (data: any) => {
-        console.log('Дані збережено:', data);
-        setFirstLoginModalVisible(false); 
+    const handleFirstLoginSubmit = async (data: FirstLoginFormData) => {
+        try {
+            const cleanNickname = data.nickname.replace('@', '');
+
+            await updateProfile({
+                authorAlias: data.authorAlias,
+                nickname: cleanNickname
+            }).unwrap();
+
+            console.log('Дані успішно збережено в БД');
+            setFirstLoginModalVisible(false); 
+        } catch (error) {
+            console.error('Помилка при збереженні:', error);
+        }
     };
 
     return (

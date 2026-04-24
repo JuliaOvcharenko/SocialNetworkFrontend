@@ -134,7 +134,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 12, 
     },
-    // Стили для пустой фиолетовой рамки
     customCheckboxFrame: {
         width: 20,
         height: 20,
@@ -146,10 +145,9 @@ const styles = StyleSheet.create({
         marginRight: 10,
         backgroundColor: 'transparent',
     },
-    // Стили для галочки внутри рамки
     checkmarkIcon: {
-        width: 14, 
-        height: 14,
+        width: 15, 
+        height: 15,
     },
     checkboxLabel: {
         fontSize: 16, 

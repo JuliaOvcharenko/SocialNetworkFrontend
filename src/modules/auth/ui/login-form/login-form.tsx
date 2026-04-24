@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text } from "react-native"; // Убрали Alert, добавили Text
+import { View, Text } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -9,13 +9,12 @@ import { LoginFormFields } from "@modules/types/auth.types";
 import { loginValidator } from "@modules/lib/login/login.schema";
 import { styles } from "./login-form.styles";
 import { useLoginMutation } from "@modules/auth/api/login-api";
-import { useRouter } from "expo-router"; 
+import { useRouter } from "expo-router";
 
 export function LoginForm() {
-    const router = useRouter(); 
+    const router = useRouter();
     const [login, { isLoading }] = useLoginMutation();
 
-    // Достаем setError и formState.errors
     const { control, handleSubmit, setError, formState: { errors } } = useForm<LoginFormFields>({
         resolver: yupResolver(loginValidator),
         defaultValues: {
@@ -28,22 +27,21 @@ export function LoginForm() {
         try {
             const result = await login(data).unwrap();
             await AsyncStorage.setItem("token", result.token);
-            
-            // Перекидываем в главное меню если успешно
-            router.replace('/core'); 
-            
+
+            router.replace('/core');
+
         } catch (err: any) {
-            // ошибка
+
             const serverMessage = err.data?.message || "";
-            
-            // Если неверные данные 
+
+
             if (serverMessage.toLowerCase().includes('password') || serverMessage.toLowerCase().includes('email') || serverMessage.toLowerCase().includes('user') || serverMessage.toLowerCase().includes('invalid')) {
                 setError('root', {
                     type: 'server',
                     message: 'Невірна електронна пошта або пароль'
                 });
             } else {
-                // Если сервер упал по другой причине
+
                 setError('root', {
                     type: 'server',
                     message: serverMessage || 'Не вдалося увійти. Спробуйте пізніше.'
@@ -93,7 +91,6 @@ export function LoginForm() {
                 )}
             />
 
-            {/* Выводим общую ошибку над кнопкой */}
             {errors.root && (
                 <Text style={{ color: '#FF3B30', textAlign: 'center', marginBottom: 12, fontSize: 14 }}>
                     {errors.root.message}

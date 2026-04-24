@@ -19,7 +19,7 @@ export function PersonalDataForm({ control, errors, isEditing }: PersonalDataFor
         <>
             <Controller
                 control={control}
-                name="firstName"
+                name="name"
                 render={({ field: { onChange, onBlur, value } }) => (
                     <Input
                         editable={isEditing}
@@ -27,7 +27,7 @@ export function PersonalDataForm({ control, errors, isEditing }: PersonalDataFor
                         onBlur={onBlur}
                         onChangeText={onChange}
                         value={value}
-                        error={errors.firstName?.message}
+                        error={errors.name?.message}
                         width="90%"
                     />
                 )}
@@ -35,7 +35,7 @@ export function PersonalDataForm({ control, errors, isEditing }: PersonalDataFor
 
             <Controller
                 control={control}
-                name="lastName"
+                name="surname"
                 render={({ field: { onChange, onBlur, value } }) => (
                     <Input
                         editable={isEditing}
@@ -43,7 +43,7 @@ export function PersonalDataForm({ control, errors, isEditing }: PersonalDataFor
                         onBlur={onBlur}
                         onChangeText={onChange}
                         value={value}
-                        error={errors.lastName?.message}
+                        error={errors.surname?.message}
                         width="90%"
                     />
                 )}
@@ -52,7 +52,7 @@ export function PersonalDataForm({ control, errors, isEditing }: PersonalDataFor
             <View style={styles.row}>
                 <Controller
                     control={control}
-                    name="birthday"
+                    name="birthDate"
                     render={({ field: { onChange, onBlur, value } }) => (
                         <Input
                             editable={isEditing}
@@ -60,7 +60,7 @@ export function PersonalDataForm({ control, errors, isEditing }: PersonalDataFor
                             onBlur={onBlur}
                             onChangeText={onChange}
                             value={value}
-                            error={errors.birthday?.message}
+                            error={errors.birthDate?.message}
                             width="90%"
                         />
                     )}

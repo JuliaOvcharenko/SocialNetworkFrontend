@@ -19,13 +19,13 @@ export function SectionHeader({ title, isEditing, onEditPress }: SectionHeaderPr
                 <Button
                     variant="secondary"
                     title="Зберегти"
-                    icon={<IMAGES.PenButton style={{ width: 20, height: 20 }} />}
+                    icon={<IMAGES.PenButton  />}
                     onPress={onEditPress}
                 />
             ) : (
                 <Button
                     variant="iconCircular"
-                    icon={<IMAGES.PenButton style={{ width: 20, height: 20 }} />}
+                    icon={<IMAGES.PenButton />}
                     onPress={onEditPress}
                 />
             )}
