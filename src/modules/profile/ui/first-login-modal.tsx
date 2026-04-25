@@ -9,11 +9,10 @@ import { Button } from '@shared/ui/button';
 
 interface FirstLoginModalProps {
     isVisible: boolean;
-    onClose: () => void;
     onSubmitSuccess: (data: FirstLoginFormData) => void;
 }
 
-export function FirstLoginModal({ isVisible, onClose, onSubmitSuccess }: FirstLoginModalProps) {
+export function FirstLoginModal({ isVisible, onSubmitSuccess }: FirstLoginModalProps) {
     const { control, handleSubmit, formState: { errors } } = useForm<FirstLoginFormData>({
         resolver: yupResolver(firstLoginSchema),
         defaultValues: {
@@ -42,9 +41,6 @@ export function FirstLoginModal({ isVisible, onClose, onSubmitSuccess }: FirstLo
                         
                         <View style={styles.header}>
                             <Text style={styles.title}>Додай деталі про себе</Text>
-                            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                                <Text style={styles.closeText}>✕</Text>
-                            </TouchableOpacity>
                         </View>
 
                         <Controller
