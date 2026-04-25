@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
 	View,
 	Text,
@@ -12,11 +12,22 @@ import {
 } from "react-native";
 import { COLOURS } from "@shared/constants/colours";
 import { Ionicons } from "@expo/vector-icons";
+import { useForm, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import {
+	createAlbumSchema,
+	CreateAlbumFormData,
+} from "../../lib/albums/album.schema";
 
 interface CreateAlbumModalProps {
 	isVisible: boolean;
 	onClose: () => void;
-	onSave: (data: { name: string; theme: string; year: string }) => void;
+	onSave: (data: {
+		name: string;
+		tag?: string;
+		year?: number;
+		visibility: "public" | "private";
+	}) => void;
 }
 
 export const CreateAlbumModal = ({
@@ -24,14 +35,29 @@ export const CreateAlbumModal = ({
 	onClose,
 	onSave,
 }: CreateAlbumModalProps) => {
-	const [name, setName] = useState("");
-	const [theme, setTheme] = useState("Природа");
-	const [year, setYear] = useState("");
+	const {
+		control,
+		handleSubmit,
+		reset,
+		formState: { errors },
+	} = useForm<CreateAlbumFormData>({
+		resolver: yupResolver(createAlbumSchema) as any,
+		defaultValues: { name: "", tag: null, year: null },
+	});
 
-	const handleSave = () => {
-		onSave({ name, theme, year });
-		setName("");
-		setYear("");
+	const handleSave = handleSubmit((data) => {
+		onSave({
+			name: data.name,
+			tag: data.tag ?? undefined,
+			year: data.year ?? undefined,
+			visibility: "public",
+		});
+		reset();
+	});
+
+	const handleClose = () => {
+		reset();
+		onClose();
 	};
 
 	return (
@@ -39,9 +65,9 @@ export const CreateAlbumModal = ({
 			animationType="fade"
 			transparent={true}
 			visible={isVisible}
-			onRequestClose={onClose}
+			onRequestClose={handleClose}
 		>
-			<TouchableWithoutFeedback onPress={onClose}>
+			<TouchableWithoutFeedback onPress={handleClose}>
 				<View style={styles.overlay}>
 					<KeyboardAvoidingView
 						behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -51,7 +77,7 @@ export const CreateAlbumModal = ({
 							<View style={styles.modalContainer}>
 								<TouchableOpacity
 									style={styles.closeButton}
-									onPress={onClose}
+									onPress={handleClose}
 									hitSlop={{
 										top: 10,
 										bottom: 10,
@@ -74,57 +100,101 @@ export const CreateAlbumModal = ({
 									<Text style={styles.label}>
 										Назва альбому
 									</Text>
-									<TextInput
-										style={styles.input}
-										placeholder="Настрій"
-										placeholderTextColor={COLOURS.Gray50}
-										value={name}
-										onChangeText={setName}
+									<Controller
+										control={control}
+										name="name"
+										render={({
+											field: { onChange, value },
+										}) => (
+											<TextInput
+												style={[
+													styles.input,
+													errors.name &&
+														styles.inputError,
+												]}
+												placeholder="Настрій"
+												placeholderTextColor={
+													COLOURS.Gray50
+												}
+												value={value}
+												onChangeText={onChange}
+											/>
+										)}
 									/>
+									{errors.name && (
+										<Text style={styles.errorText}>
+											{errors.name.message}
+										</Text>
+									)}
 								</View>
 
 								<View style={styles.inputGroup}>
-									<Text style={styles.label}>
-										Оберіть тему
-									</Text>
-									<TouchableOpacity
-										style={styles.dropdown}
-										activeOpacity={0.7}
-									>
-										<Text style={styles.dropdownText}>
-											{theme}
+									<Text style={styles.label}>Тег</Text>
+									<Controller
+										control={control}
+										name="tag"
+										render={({
+											field: { onChange, value },
+										}) => (
+											<TextInput
+												style={[
+													styles.input,
+													errors.tag &&
+														styles.inputError,
+												]}
+												placeholder="Природа"
+												placeholderTextColor={
+													COLOURS.Gray50
+												}
+												onChangeText={onChange}
+											/>
+										)}
+									/>
+									{errors.tag && (
+										<Text style={styles.errorText}>
+											{errors.tag.message}
 										</Text>
-										<Ionicons
-											name="chevron-down"
-											size={20}
-											color={COLOURS.Gray50}
-										/>
-									</TouchableOpacity>
+									)}
 								</View>
 
 								<View style={styles.inputGroup}>
 									<Text style={styles.label}>
 										Рік альбому
 									</Text>
-									<TouchableOpacity
-										style={styles.dropdown}
-										activeOpacity={0.7}
-									>
-										<Text
-											style={
-												year
-													? styles.dropdownText
-													: styles.placeholderText
-											}
-										>
-											{year || "Оберіть рік"}
+									<Controller
+										control={control}
+										name="year"
+										render={({
+											field: { onChange, value },
+										}) => (
+											<TextInput
+												style={[
+													styles.input,
+													errors.year &&
+														styles.inputError,
+												]}
+												placeholder="2024"
+												placeholderTextColor={
+													COLOURS.Gray50
+												}
+												value={value?.toString() ?? ""}
+												onChangeText={(v) =>
+													onChange(
+														v
+															? Number(v)
+															: undefined,
+													)
+												}
+												keyboardType="numeric"
+												maxLength={4}
+											/>
+										)}
+									/>
+									{errors.year && (
+										<Text style={styles.errorText}>
+											{errors.year.message}
 										</Text>
-										<Ionicons
-											name="chevron-down"
-											size={20}
-											color={COLOURS.Gray50}
-										/>
-									</TouchableOpacity>
+									)}
 								</View>
 
 								<View style={styles.footer}>
@@ -133,7 +203,7 @@ export const CreateAlbumModal = ({
 											styles.button,
 											styles.cancelButton,
 										]}
-										onPress={onClose}
+										onPress={handleClose}
 									>
 										<Text style={styles.cancelButtonText}>
 											Скасувати
@@ -221,23 +291,13 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		color: COLOURS.darkBlue,
 	},
-	dropdown: {
-		height: 52,
-		borderWidth: 1,
-		borderColor: COLOURS.Blue20,
-		borderRadius: 12,
-		paddingHorizontal: 16,
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
+	inputError: {
+		borderColor: "#E53935",
 	},
-	dropdownText: {
-		fontSize: 16,
-		color: COLOURS.darkBlue,
-	},
-	placeholderText: {
-		fontSize: 16,
-		color: COLOURS.Gray50,
+	errorText: {
+		color: "#E53935",
+		fontSize: 12,
+		marginTop: 4,
 	},
 	footer: {
 		flexDirection: "row",

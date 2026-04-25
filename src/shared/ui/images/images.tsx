@@ -13,6 +13,8 @@ import { CheckBoxFalse } from "./_images/checkBox/checkBoxFalse";
 import { CheckBoxTrue } from "./_images/checkBox/checkBoxTrue";
 import { PlusButton } from "./_images/buttonIcons/plusButton";
 import { GalleryButton } from "./_images/buttonIcons/galleryButton";
+import { TrashAlbumButton } from "./_images/buttonIcons/trashAlbum";
+import { EyeAlbumButton } from "./_images/buttonIcons/eyeAlbum";
 
 export const IMAGES = {
     LogoImage,
@@ -29,5 +31,7 @@ export const IMAGES = {
     CheckBoxFalse,
     CheckBoxTrue,
     PlusButton,
-    GalleryButton
+    GalleryButton,
+    TrashAlbumButton,
+    EyeAlbumButton
 }
