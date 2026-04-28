@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View } from 'react-native';
 
 import { FirstLoginModal } from '../../../modules/profile/ui/first-login-modal'; 
 import { Header } from '@shared/ui/header';
 import { FirstLoginFormData } from '@modules/lib/login/first-login-modal.schema';
 
-
-import { useUpdateProfileMutation } from "@modules/auth/api/user-api";
+import { useUpdateProfileMutation, useGetMeQuery } from "@modules/auth/api/user-api";
 
 export default function MainScreen() {
-    const [isFirstLoginModalVisible, setFirstLoginModalVisible] = useState(true);
-    
+    const [isFirstLoginModalVisible, setFirstLoginModalVisible] = useState(false);
+    const { data: user } = useGetMeQuery(); 
     const [updateProfile] = useUpdateProfileMutation(); 
+
+    useEffect(() => {
+        if (user && !user.nickname) {
+            setFirstLoginModalVisible(true);
+        }
+    }, [user]);
 
     const handleFirstLoginSubmit = async (data: FirstLoginFormData) => {
         try {
@@ -35,7 +40,6 @@ export default function MainScreen() {
             
             <FirstLoginModal 
                 isVisible={isFirstLoginModalVisible}
-                onClose={() => setFirstLoginModalVisible(false)} 
                 onSubmitSuccess={handleFirstLoginSubmit} 
             />
         </View>

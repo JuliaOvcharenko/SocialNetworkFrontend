@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
         backgroundColor: COLOURS.Plum50, 
         paddingVertical: 10,
         paddingHorizontal: 12,
-        borderRadius: 24, 
+        borderRadius: 30, 
         borderWidth: 1.5,
         borderColor: COLOURS.Plum, 
     },
