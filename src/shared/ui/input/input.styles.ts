@@ -8,7 +8,7 @@ export const styles = StyleSheet.create({
     },
     label: {
         fontSize: 14, 
-        fontWeight: 400,
+        fontFamily: 'Wals-Regular', 
         marginBottom: 8, 
     },
     inputWrapper: {
@@ -25,6 +25,7 @@ export const styles = StyleSheet.create({
     input: {
         flex: 1,
         fontSize: 16,
+        fontFamily: 'Wals-Regular', 
         color: COLOURS.darkBlue, 
         paddingVertical: 0, 
     },
@@ -40,6 +41,7 @@ export const styles = StyleSheet.create({
     errorText: {
         color: COLOURS.Red,
         fontSize: 12, 
+        fontFamily: 'Wals-Regular',
         marginTop: 4, 
         marginLeft: 4,
     }

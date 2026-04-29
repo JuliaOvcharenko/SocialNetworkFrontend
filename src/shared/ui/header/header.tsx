@@ -7,7 +7,7 @@ import { Button } from "@shared/ui/button";
 import { COLOURS } from "@shared/constants/colours";
 
 export function Header(props: HeaderProps) {
-    const { showCreateButton, showSettingsButton, showLogoutButton } = props;
+    const { showCreateButton, showSettingsButton, showLogoutButton, onCreatePress } = props; 
     
     const router = useRouter();
     const pathname = usePathname(); 
@@ -25,6 +25,7 @@ export function Header(props: HeaderProps) {
                 {showCreateButton && (
                     <Button 
                         variant="iconCircular"
+                        onPress={onCreatePress} 
                         icon={<IMAGES.AddPostButton style={{ width: 20, height: 20 }}/>}
                     />
                 )}

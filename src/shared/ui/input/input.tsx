@@ -5,7 +5,7 @@ import { COLOURS } from "../../constants/colours";
 import { IMAGES } from "../images";
 
 interface InputProps extends TextInputProps {
-    label: string;
+    label?: string;
     isPassword?: boolean; 
     error?: string;
     width?: DimensionValue; 

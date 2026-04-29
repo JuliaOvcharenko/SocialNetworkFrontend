@@ -15,6 +15,10 @@ import { PlusButton } from "./_images/buttonIcons/plusButton";
 import { GalleryButton } from "./_images/buttonIcons/galleryButton";
 import { TrashAlbumButton } from "./_images/buttonIcons/trashAlbum";
 import { EyeAlbumButton } from "./_images/buttonIcons/eyeAlbum";
+import { TrashButton } from "./_images/buttonIcons/trash";
+import { SmileButton } from "./_images/buttonIcons/smile";
+import { HandButton } from "./_images/buttonIcons/hand";
+import { XButton } from "./_images/buttonIcons/xButton";
 
 export const IMAGES = {
     LogoImage,
@@ -33,5 +37,9 @@ export const IMAGES = {
     PlusButton,
     GalleryButton,
     TrashAlbumButton,
-    EyeAlbumButton
+    EyeAlbumButton,
+    TrashButton,
+    SmileButton,
+    HandButton,
+    XButton
 }

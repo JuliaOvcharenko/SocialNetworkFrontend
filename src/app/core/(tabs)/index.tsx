@@ -6,9 +6,15 @@ import { Header } from '@shared/ui/header';
 import { FirstLoginFormData } from '@modules/lib/login/first-login-modal.schema';
 
 import { useUpdateProfileMutation, useGetMeQuery } from "@modules/auth/api/user-api";
+import { CreatePostModal } from '@modules/post/ui/create-post-modal';
 
 export default function MainScreen() {
+    // Стейт для первой авторизации
     const [isFirstLoginModalVisible, setFirstLoginModalVisible] = useState(false);
+    
+    // Стейт для создания поста (наша новая модалка)
+    const [isCreateModalVisible, setCreateModalVisible] = useState(false); // <--- Добавили стейт
+
     const { data: user } = useGetMeQuery(); 
     const [updateProfile] = useUpdateProfileMutation(); 
 
@@ -36,11 +42,25 @@ export default function MainScreen() {
 
     return (
         <View style={{ flex: 1 }}>
-            <Header showSettingsButton showCreateButton showLogoutButton />
+            {/* Добавили функцию onCreatePress для плюсика */}
+            <Header 
+                showSettingsButton 
+                showCreateButton 
+                showLogoutButton 
+                onCreatePress={() => setCreateModalVisible(true)} 
+            />
             
+            {/* ... тут в будущем будет список постов ... */}
+
             <FirstLoginModal 
                 isVisible={isFirstLoginModalVisible}
                 onSubmitSuccess={handleFirstLoginSubmit} 
+            />
+
+            {/* Вставили новую модалку */}
+            <CreatePostModal 
+                isVisible={isCreateModalVisible} 
+                onClose={() => setCreateModalVisible(false)} 
             />
         </View>
     );
