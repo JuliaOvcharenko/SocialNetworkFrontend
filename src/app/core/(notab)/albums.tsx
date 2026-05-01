@@ -38,7 +38,7 @@ import { EyeAlbumButton } from "@shared/ui/images/_images/buttonIcons/eyeAlbum";
 import { TrashAlbumButton } from "@shared/ui/images/_images/buttonIcons/trashAlbum";
 import { PlusButton } from "@shared/ui/images/_images/buttonIcons/plusButton";
 
-function photoUri(url: string): string {
+export function photoUri(url: string): string {
     if (!url) return "";
     if (url.startsWith("http")) return url;
     const filename = url.split("/").pop();

@@ -17,13 +17,13 @@ export function PostFooter({ likes, views, isLiked }: PostFooterProps) {
                     <IMAGES.HeartButton />
                     <Text style={styles.actionText}>{likes} Вподобань</Text>
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity style={styles.actionItem}>
                     <IMAGES.LikeButton />
                     <Text style={styles.actionText}>{likes} Вподобань</Text>
                 </TouchableOpacity>
             </View>
-            
+
             <View style={styles.row}>
                 <View style={styles.actionItem}>
                     <IMAGES.EyePButton />

@@ -16,15 +16,29 @@ export const styles = StyleSheet.create({
         fontSize: 14,
         color: COLOURS.Black,
         lineHeight: 20,
+        marginBottom: 8,
     },
     tagsContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
+        gap: 6,
+        marginTop: 8,
     },
     tagText: {
         fontFamily: 'Wals-Regular',
         fontSize: 14,
         color: COLOURS.Plum,
         lineHeight: 20,
-    }
+    },
+    linksContainer: {
+        marginTop: 8,
+        gap: 4,
+    },
+    linkText: {
+        fontFamily: 'Wals-Regular',
+        fontSize: 13,
+        color: COLOURS.Plum,
+        lineHeight: 18,
+        textDecorationLine: 'underline',
+    },
 });

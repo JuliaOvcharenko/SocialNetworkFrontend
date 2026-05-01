@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList } from 'react-native';
+import { View, FlatList, ActivityIndicator, Text } from 'react-native';
 
 import { FirstLoginModal } from '../../../modules/profile/ui/first-login-modal';
 import { Header } from '@shared/ui/header';
@@ -8,33 +8,8 @@ import { FirstLoginFormData } from '@modules/lib/login/first-login-modal.schema'
 import { useUpdateProfileMutation, useGetMeQuery } from "@modules/auth/api/user-api";
 import { CreatePostModal } from '@modules/post/ui/create-post-modal';
 import { Post } from '@modules/post/ui/post';
+import { useGetAllPostsQuery } from '@modules/post/api/post.api';
 
-const MOCK_POSTS = [
-    {
-        id: '1',
-        author: {
-            id: 'user_1',
-            nickname: 'kaka',
-            avatarUrl: require('../../../assets/Frame1.png'),
-            isOnline: true,
-            signatureUrl: require('../../../assets/icons/sign.png')
-        },
-        title: 'Природа, книга і спокій 🌿',
-        text: 'Інколи найкращі ідеї народжуються в тиші 🌿\nПрирода, книга і спокій — усе, що потрібно, аби перезавантажитись.',
-        tags: ['#відпочинок', '#натхнення', '#життя', '#природа', '#читання', '#спокій', '#гармонія'],
-        images: [
-            require('../../../assets/Frame1.png'),
-            require('../../../assets/Frame2.png'),
-            require('../../../assets/Frame1.png'),
-            require('../../../assets/Frame2.png'),
-            require('../../../assets/Frame1.png'),
-        ],
-        likesCount: 120,
-        viewsCount: 890,
-        isLikedByMe: false,
-        createdAt: new Date().toISOString(),
-    }
-];
 
 export default function MainScreen() {
     const [isFirstLoginModalVisible, setFirstLoginModalVisible] = useState(false);
@@ -42,6 +17,9 @@ export default function MainScreen() {
 
     const { data: user } = useGetMeQuery();
     const [updateProfile] = useUpdateProfileMutation();
+
+    const { data: postsData, isLoading, isError } = useGetAllPostsQuery({ page: 1, limit: 5 });
+    const posts = postsData?.data ?? [];
 
     useEffect(() => {
         if (user && !user.nickname) {
@@ -58,7 +36,7 @@ export default function MainScreen() {
             }).unwrap();
             setFirstLoginModalVisible(false);
         } catch (error) {
-            console.error(error);
+            throw error
         }
     };
 
@@ -71,10 +49,17 @@ export default function MainScreen() {
                 onCreatePress={() => setCreateModalVisible(true)}
             />
 
+            {isLoading && <ActivityIndicator style={{ marginTop: 32 }} size="large" />}
+            {isError && (
+                <Text style={{ textAlign: 'center', marginTop: 32, color: 'red' }}>
+                    Не вдалось завантажити пости
+                </Text>
+            )}
+
             <FlatList
-                data={MOCK_POSTS}
+                data={posts}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <Post post={item as any} />}
+                renderItem={({ item }) => <Post post={item} />}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingTop: 16, paddingBottom: 100 }}
             />
@@ -91,3 +76,4 @@ export default function MainScreen() {
         </View>
     );
 }
+
