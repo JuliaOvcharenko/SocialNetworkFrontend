@@ -1,6 +1,7 @@
 import { baseApi } from "@shared/api/baseApi";
 import {
     CreatePostPayload,
+    UpdatePostPayload,
     PaginatedPosts,
     PaginationParams,
     IPost,
@@ -24,11 +25,35 @@ export const postApi = baseApi.injectEndpoints({
             providesTags: ["Post"],
         }),
 
+        getPostById: builder.query<IPost, number>({
+            query: (postId) => ({
+                url: `posts/${postId}`,
+            }),
+            providesTags: ["Post"],
+        }),
+
         createPost: builder.mutation<IPost, CreatePostPayload>({
             query: (body) => ({
                 url: "posts",
                 method: "POST",
                 body,
+            }),
+            invalidatesTags: ["Post"],
+        }),
+
+        updatePost: builder.mutation<IPost, { postId: number; body: UpdatePostPayload }>({
+            query: ({ postId, body }) => ({
+                url: `posts/${postId}`,
+                method: "PATCH",
+                body,
+            }),
+            invalidatesTags: ["Post"],
+        }),
+
+        deletePost: builder.mutation<{ success: boolean }, number>({
+            query: (postId) => ({
+                url: `posts/${postId}`,
+                method: "DELETE",
             }),
             invalidatesTags: ["Post"],
         }),
@@ -46,6 +71,9 @@ export const postApi = baseApi.injectEndpoints({
 export const {
     useGetAllPostsQuery,
     useGetMyPostsQuery,
+    useGetPostByIdQuery,
     useCreatePostMutation,
+    useUpdatePostMutation,
+    useDeletePostMutation,
     useUploadPostImageMutation,
 } = postApi;

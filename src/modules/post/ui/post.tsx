@@ -14,7 +14,7 @@ interface PostProps {
 export function Post({ post }: PostProps) {
 	return (
 		<View style={styles.postContainer}>
-			<PostHeader author={post.author} />
+			<PostHeader author={post.author} postId={post.id} />
 
 			<PostContent
 				title={post.title}

@@ -1,17 +1,36 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import { styles } from "./post-header.styles";
 import { IUser } from "../../../types/post.types";
 import { IMAGES } from "@shared/ui/images";
 import { BASE_URL } from "@shared/config/api.config";
+import { PostOptionsModal } from "./postOptional/PostOptionsModal";
+import { getCurrentUserId } from "@shared/api/getCurrentUserId";
+import { CreatePostModal } from "../../create-post-modal";
 
 interface PostHeaderProps {
     author: IUser;
+    postId: number;
 }
 
-export function PostHeader({ author }: PostHeaderProps) {
+export function PostHeader({ author, postId }: PostHeaderProps) {
+    const [menuVisible, setMenuVisible] = useState(false);
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [isOwner, setIsOwner] = useState(false);
+
+    useEffect(() => {
+        getCurrentUserId().then((id) => {
+            setIsOwner(id === author.id);
+        });
+    }, [author.id]);
+
     const avatarUri = author.avatarUrl ? `${BASE_URL}${author.avatarUrl}` : null;
     const signatureUri = author.signatureUrl ? `${BASE_URL}${author.signatureUrl}` : null;
+
+    const handleEdit = () => {
+        setMenuVisible(false);
+        setEditModalVisible(true);
+    };
 
     return (
         <View style={styles.container}>
@@ -27,9 +46,14 @@ export function PostHeader({ author }: PostHeaderProps) {
                     </View>
                     <Text style={styles.nickname}>{author.nickname}</Text>
                 </View>
-                <TouchableOpacity style={styles.moreButton}>
-                    <IMAGES.MoreButton />
-                </TouchableOpacity>
+                {isOwner && (
+                    <TouchableOpacity
+                        style={styles.moreButton}
+                        onPress={() => setMenuVisible(true)}
+                    >
+                        <IMAGES.MoreButton />
+                    </TouchableOpacity>
+                )}
             </View>
 
             {signatureUri ? (
@@ -37,6 +61,19 @@ export function PostHeader({ author }: PostHeaderProps) {
             ) : null}
 
             <View style={styles.separator} />
+
+            <PostOptionsModal
+                visible={menuVisible}
+                postId={postId}
+                onClose={() => setMenuVisible(false)}
+                onEdit={handleEdit}
+            />
+
+            <CreatePostModal
+                isVisible={editModalVisible}
+                onClose={() => setEditModalVisible(false)}
+                editPostId={postId}
+            />
         </View>
     );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
 	View,
 	Text,
@@ -19,14 +19,23 @@ import { IMAGES } from "@shared/ui/images";
 import {
 	useCreatePostMutation,
 	useUploadPostImageMutation,
+	useUpdatePostMutation,
+	useGetPostByIdQuery,
 } from "../api/post.api";
 
 interface CreatePostModalProps {
 	isVisible: boolean;
 	onClose: () => void;
+	editPostId?: number;
 }
 
-export function CreatePostModal({ isVisible, onClose }: CreatePostModalProps) {
+export function CreatePostModal({
+	isVisible,
+	onClose,
+	editPostId,
+}: CreatePostModalProps) {
+	const isEditMode = !!editPostId;
+
 	const [title, setTitle] = useState("");
 	const [topic, setTopic] = useState("");
 	const [postText, setPostText] = useState("");
@@ -37,9 +46,30 @@ export function CreatePostModal({ isVisible, onClose }: CreatePostModalProps) {
 	const [isAddingLink, setIsAddingLink] = useState(false);
 	const [currentLink, setCurrentLink] = useState("");
 	const [photos, setPhotos] = useState<string[]>([]);
+	const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
 
-	const [createPost, { isLoading: isPublishing }] = useCreatePostMutation();
+	const [createPost, { isLoading: isCreating }] = useCreatePostMutation();
+	const [updatePost, { isLoading: isUpdating }] = useUpdatePostMutation();
 	const [uploadPostImage] = useUploadPostImageMutation();
+	const isPublishing = isCreating || isUpdating;
+
+	const { data: postData, isSuccess } = useGetPostByIdQuery(editPostId!, {
+		skip: !editPostId,
+	});
+
+	useEffect(() => {
+		if (!isVisible) return;
+
+		if (isEditMode && isSuccess && postData) {
+			setTitle(postData.title ?? "");
+			setTopic(postData.topic ?? "");
+			setPostText(postData.content ?? "");
+			setTags(postData.tags ?? []);
+			setLinks(postData.links?.map((l: { url: string }) => l.url) ?? []);
+			setExistingImageUrls(postData.images ?? []);
+			setPhotos([]);
+		}
+	}, [isSuccess, isVisible, postData]);
 
 	const scrollY = useRef(new Animated.Value(0)).current;
 	const [scrollViewHeight, setScrollViewHeight] = useState(0);
@@ -63,6 +93,7 @@ export function CreatePostModal({ isVisible, onClose }: CreatePostModalProps) {
 		setTags([]);
 		setLinks([]);
 		setPhotos([]);
+		setExistingImageUrls([]);
 		setIsAddingTag(false);
 		setCurrentTag("");
 		setIsAddingLink(false);
@@ -77,6 +108,11 @@ export function CreatePostModal({ isVisible, onClose }: CreatePostModalProps) {
 				: `#${currentTag.trim()}`;
 			if (!tags.includes(newTag)) {
 				setTags([...tags, newTag]);
+				if (!isEditMode) {
+					setPostText((prev) =>
+						prev ? `${prev} ${newTag}` : newTag,
+					);
+				}
 			}
 		}
 		setCurrentTag("");
@@ -93,6 +129,12 @@ export function CreatePostModal({ isVisible, onClose }: CreatePostModalProps) {
 
 	const removePhoto = (indexToRemove: number) => {
 		setPhotos(photos.filter((_, index) => index !== indexToRemove));
+	};
+
+	const removeExistingImage = (indexToRemove: number) => {
+		setExistingImageUrls(
+			existingImageUrls.filter((_, index) => index !== indexToRemove),
+		);
 	};
 
 	const handlePickImages = async () => {
@@ -133,14 +175,25 @@ export function CreatePostModal({ isVisible, onClose }: CreatePostModalProps) {
 				finalLinks.push(currentLink.trim());
 			}
 
-			await createPost({
+			const allImageUrls = [...existingImageUrls, ...uploadedUrls];
+
+			const payload = {
 				title,
 				content: postText,
 				topic: topic || undefined,
 				tags,
-				imageUrls: uploadedUrls,
+				imageUrls: allImageUrls,
 				links: finalLinks.map((url) => ({ url })),
-			}).unwrap();
+			};
+
+			if (isEditMode && editPostId) {
+				await updatePost({
+					postId: editPostId,
+					body: payload,
+				}).unwrap();
+			} else {
+				await createPost(payload).unwrap();
+			}
 
 			handleClose();
 		} catch (error) {
@@ -158,7 +211,9 @@ export function CreatePostModal({ isVisible, onClose }: CreatePostModalProps) {
 					<View style={styles.modalContent}>
 						<View style={styles.header}>
 							<Text style={styles.title}>
-								Створення публікації
+								{isEditMode
+									? "Редагування публікації"
+									: "Створення публікації"}
 							</Text>
 							<Button
 								onPress={handleClose}
@@ -220,7 +275,6 @@ export function CreatePostModal({ isVisible, onClose }: CreatePostModalProps) {
 											</Text>
 										</View>
 									))}
-
 									{!isAddingTag ? (
 										<Button
 											variant="iconCircular"
@@ -343,9 +397,29 @@ export function CreatePostModal({ isVisible, onClose }: CreatePostModalProps) {
 									</View>
 								)}
 
+								{existingImageUrls.map((url, index) => (
+									<View
+										key={`existing-${index}`}
+										style={styles.imagePreviewContainer}
+									>
+										<Image
+											source={{ uri: url }}
+											style={styles.imagePreview}
+										/>
+										<Button
+											variant="iconCircular"
+											style={styles.deleteImageBtn}
+											onPress={() =>
+												removeExistingImage(index)
+											}
+											icon={<IMAGES.TrashButton />}
+										/>
+									</View>
+								))}
+
 								{photos.map((photo, index) => (
 									<View
-										key={index}
+										key={`new-${index}`}
 										style={styles.imagePreviewContainer}
 									>
 										<Image
@@ -373,7 +447,11 @@ export function CreatePostModal({ isVisible, onClose }: CreatePostModalProps) {
 									/>
 									<Button
 										variant="primary"
-										title="Публікація"
+										title={
+											isEditMode
+												? "Зберегти"
+												: "Публікація"
+										}
 										icon={<IMAGES.HandButton />}
 										iconPosition="right"
 										style={styles.publishButton}

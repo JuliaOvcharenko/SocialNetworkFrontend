@@ -1,5 +1,5 @@
 export interface IUser {
-    id: string;
+    id: number;
     nickname: string;
     avatarUrl: string;
     isOnline?: boolean;
@@ -7,9 +7,10 @@ export interface IUser {
 }
 
 export interface IPost {
-    id: string;
+    id: number;
     author: IUser;
     title: string;
+    topic: string;
     text?: string;
     content?: string;
     tags: string[];
@@ -34,6 +35,15 @@ export interface PaginatedPosts {
 export interface CreatePostPayload {
     title: string;
     content: string;
+    topic?: string;
+    tags?: string[];
+    imageUrls?: string[];
+    links?: { url: string; label?: string }[];
+}
+
+export interface UpdatePostPayload {
+    title?: string;
+    content?: string;
     topic?: string;
     tags?: string[];
     imageUrls?: string[];

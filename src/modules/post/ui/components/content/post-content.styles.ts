@@ -18,6 +18,18 @@ export const styles = StyleSheet.create({
         lineHeight: 20,
         marginBottom: 8,
     },
+    imagesContainer: {
+        gap: 2,
+        marginBottom: 8,
+    },
+    imageRow: {
+        flexDirection: 'row',
+        gap: 2,
+    },
+    image: {
+        height: 120,
+        borderRadius: 4,
+    },
     tagsContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
