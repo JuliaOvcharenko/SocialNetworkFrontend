@@ -20,19 +20,22 @@ import {
 	useCreatePostMutation,
 	useUploadPostImageMutation,
 	useUpdatePostMutation,
-	useGetPostByIdQuery,
 } from "../api/post.api";
+import { IPost } from "../types/post.types";
+import { BASE_URL } from "@shared/config/api.config";
 
 interface CreatePostModalProps {
 	isVisible: boolean;
 	onClose: () => void;
 	editPostId?: number;
+	initialData?: IPost;
 }
 
 export function CreatePostModal({
 	isVisible,
 	onClose,
 	editPostId,
+	initialData,
 }: CreatePostModalProps) {
 	const isEditMode = !!editPostId;
 
@@ -53,23 +56,21 @@ export function CreatePostModal({
 	const [uploadPostImage] = useUploadPostImageMutation();
 	const isPublishing = isCreating || isUpdating;
 
-	const { data: postData, isSuccess } = useGetPostByIdQuery(editPostId!, {
-		skip: !editPostId,
-	});
-
 	useEffect(() => {
-		if (!isVisible) return;
+		if (!isVisible || !isEditMode || !initialData) return;
 
-		if (isEditMode && isSuccess && postData) {
-			setTitle(postData.title ?? "");
-			setTopic(postData.topic ?? "");
-			setPostText(postData.content ?? "");
-			setTags(postData.tags ?? []);
-			setLinks(postData.links?.map((l: { url: string }) => l.url) ?? []);
-			setExistingImageUrls(postData.images ?? []);
-			setPhotos([]);
-		}
-	}, [isSuccess, isVisible, postData]);
+		setTitle(initialData.title ?? "");
+		setTopic(initialData.topic ?? "");
+		setPostText(initialData.content ?? "");
+		setTags(initialData.tags ?? []);
+		setLinks(initialData.links?.map((l: { url: string }) => l.url) ?? []);
+		setExistingImageUrls(
+			initialData.images?.map((url: string) =>
+				url.startsWith("http") ? url : `${BASE_URL}${url}`,
+			) ?? [],
+		);
+		setPhotos([]);
+	}, [isVisible, initialData]);
 
 	const scrollY = useRef(new Animated.Value(0)).current;
 	const [scrollViewHeight, setScrollViewHeight] = useState(0);

@@ -25,13 +25,6 @@ export const postApi = baseApi.injectEndpoints({
             providesTags: ["Post"],
         }),
 
-        getPostById: builder.query<IPost, number>({
-            query: (postId) => ({
-                url: `posts/${postId}`,
-            }),
-            providesTags: ["Post"],
-        }),
-
         createPost: builder.mutation<IPost, CreatePostPayload>({
             query: (body) => ({
                 url: "posts",
@@ -71,7 +64,6 @@ export const postApi = baseApi.injectEndpoints({
 export const {
     useGetAllPostsQuery,
     useGetMyPostsQuery,
-    useGetPostByIdQuery,
     useCreatePostMutation,
     useUpdatePostMutation,
     useDeletePostMutation,
