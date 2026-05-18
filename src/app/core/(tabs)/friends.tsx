@@ -30,10 +30,14 @@ function photoUri(url: string): string {
 }
 
 export default function FriendsScreen() {
-	const [activeTab, setActiveTab] = useState<"main" | "requests" | "recommendations" | "all friends">("main");
+	const [activeTab, setActiveTab] = useState<
+		"main" | "requests" | "recommendations" | "all friends"
+	>("main");
 	const [isModalVisible, setModalVisible] = useState(false);
 	const [modalText, setModalText] = useState("");
-	const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+	const [pendingAction, setPendingAction] = useState<(() => void) | null>(
+		null,
+	);
 	const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 	const [hiddenSuggestions, setHiddenSuggestions] = useState<number[]>([]);
 
@@ -41,12 +45,22 @@ export default function FriendsScreen() {
 		getCurrentUserId().then(setCurrentUserId);
 	}, []);
 
-	const { data: overview, isLoading: overviewLoading, refetch: refetchOverview } = useGetOverviewQuery(undefined, {
+	const {
+		data: overview,
+		isLoading: overviewLoading,
+		refetch: refetchOverview,
+	} = useGetOverviewQuery(undefined, {
 		skip: activeTab !== "main",
 	});
-	const { data: requests, isLoading: requestsLoading } = useGetRequestsQuery();
-	const { data: suggestions, isLoading: suggestionsLoading, refetch: refetchSuggestions } = useGetSuggestionsQuery();
-	const { data: friends, isLoading: friendsLoading } = useGetAllFriendsQuery();
+	const { data: requests, isLoading: requestsLoading } =
+		useGetRequestsQuery();
+	const {
+		data: suggestions,
+		isLoading: suggestionsLoading,
+		refetch: refetchSuggestions,
+	} = useGetSuggestionsQuery();
+	const { data: friends, isLoading: friendsLoading } =
+		useGetAllFriendsQuery();
 
 	const [acceptAction] = useAcceptActionMutation();
 	const [deleteAction] = useDeleteActionMutation();
@@ -81,7 +95,15 @@ export default function FriendsScreen() {
 	};
 
 	const handleAcceptSuggestion = async (id: number) => {
-		await acceptAction({ id, type: "suggestion" });
+		try {
+			const result = await acceptAction({
+				id,
+				type: "suggestion",
+			}).unwrap();
+			console.log("acceptSuggestion result:", result);
+		} catch (e) {
+			console.error("acceptSuggestion error:", e);
+		}
 		refetchSuggestions();
 		if (activeTab === "main") refetchOverview();
 	};
@@ -95,9 +117,13 @@ export default function FriendsScreen() {
 			: require("../../../assets/Frame1.png");
 	};
 
-	const getFriendFromFriendship = (item: any, variant: "request" | "friend") => {
+	const getFriendFromFriendship = (
+		item: any,
+		variant: "request" | "friend",
+	) => {
 		if (variant === "request") return item.fromProfileRel ?? null;
-		if (!currentUserId) return item.fromProfileRel ?? item.toProfileRel ?? null;
+		if (!currentUserId)
+			return item.fromProfileRel ?? item.toProfileRel ?? null;
 		return item.from_profile === currentUserId
 			? item.toProfileRel
 			: item.fromProfileRel;
@@ -131,12 +157,19 @@ export default function FriendsScreen() {
 			<Header showSettingsButton showLogoutButton />
 
 			<View style={styles.tabsContainer}>
-				{(["main", "requests", "recommendations", "all friends"] as const).map((tab) => {
+				{(
+					[
+						"main",
+						"requests",
+						"recommendations",
+						"all friends",
+					] as const
+				).map((tab) => {
 					const labels = {
 						main: "Головна",
 						requests: "Запити",
 						recommendations: "Рекомендації",
-						"all friends": "Усі друзі",
+						"all friends": "Всі друзі",
 					};
 					return (
 						<TouchableOpacity
@@ -152,7 +185,9 @@ export default function FriendsScreen() {
 							>
 								{labels[tab]}
 							</Text>
-							{activeTab === tab && <View style={styles.indicator} />}
+							{activeTab === tab && (
+								<View style={styles.indicator} />
+							)}
 						</TouchableOpacity>
 					);
 				})}
@@ -169,8 +204,12 @@ export default function FriendsScreen() {
 						>
 							<View style={styles.sectionHeader}>
 								<Text style={styles.sectionTitle}>Запити</Text>
-								<TouchableOpacity onPress={() => setActiveTab("requests")}>
-									<Text style={styles.sectionLink}>Дивитись всі</Text>
+								<TouchableOpacity
+									onPress={() => setActiveTab("requests")}
+								>
+									<Text style={styles.sectionLink}>
+										Дивитись всі
+									</Text>
 								</TouchableOpacity>
 							</View>
 							{overview?.requests.slice(0, 2).map((item) => (
@@ -179,41 +218,79 @@ export default function FriendsScreen() {
 									user={mapFriendship(item, "request")}
 									variant="request"
 									onPrimaryPress={() =>
-										acceptAction({ id: item.id, type: "request" })
+										acceptAction({
+											id: item.id,
+											type: "request",
+										})
 									}
 									onSecondaryPress={() =>
 										openModal("Відхилити запит?", () =>
-											deleteAction({ id: item.id, type: "request" }),
+											deleteAction({
+												id: item.id,
+												type: "request",
+											}),
 										)
 									}
 								/>
 							))}
 
-							<View style={[styles.sectionHeader, { marginTop: 24 }]}>
-								<Text style={styles.sectionTitle}>Рекомендації</Text>
-								<TouchableOpacity onPress={() => setActiveTab("recommendations")}>
-									<Text style={styles.sectionLink}>Дивитись всі</Text>
+							<View
+								style={[
+									styles.sectionHeader,
+									{ marginTop: 24 },
+								]}
+							>
+								<Text style={styles.sectionTitle}>
+									Рекомендації
+								</Text>
+								<TouchableOpacity
+									onPress={() =>
+										setActiveTab("recommendations")
+									}
+								>
+									<Text style={styles.sectionLink}>
+										Дивитись всі
+									</Text>
 								</TouchableOpacity>
 							</View>
 							{overview?.suggestions
-								.filter((user: any) => !hiddenSuggestions.includes(user.id))
+								.filter(
+									(user: any) =>
+										!hiddenSuggestions.includes(user.id),
+								)
 								.slice(0, 2)
 								.map((user: any) => (
 									<FriendCard
 										key={`main-rec-${user.id}`}
 										user={mapSuggestion(user)}
 										variant="recommendation"
-										onPrimaryPress={() => handleAcceptSuggestion(user.id)}
+										onPrimaryPress={() =>
+											handleAcceptSuggestion(user.id)
+										}
 										onSecondaryPress={() =>
-											setHiddenSuggestions((prev) => [...prev, user.id])
+											setHiddenSuggestions((prev) => [
+												...prev,
+												user.id,
+											])
 										}
 									/>
 								))}
 
-							<View style={[styles.sectionHeader, { marginTop: 24 }]}>
-								<Text style={styles.sectionTitle}>Всі друзі</Text>
-								<TouchableOpacity onPress={() => setActiveTab("all friends")}>
-									<Text style={styles.sectionLink}>Дивитись всі</Text>
+							<View
+								style={[
+									styles.sectionHeader,
+									{ marginTop: 24 },
+								]}
+							>
+								<Text style={styles.sectionTitle}>
+									Всі друзі
+								</Text>
+								<TouchableOpacity
+									onPress={() => setActiveTab("all friends")}
+								>
+									<Text style={styles.sectionLink}>
+										Дивитись всі
+									</Text>
 								</TouchableOpacity>
 							</View>
 							{overview?.friends.slice(0, 2).map((item) => (
@@ -246,11 +323,17 @@ export default function FriendsScreen() {
 									user={mapFriendship(item, "request")}
 									variant="request"
 									onPrimaryPress={() =>
-										acceptAction({ id: item.id, type: "request" })
+										acceptAction({
+											id: item.id,
+											type: "request",
+										})
 									}
 									onSecondaryPress={() =>
 										openModal("Відхилити запит?", () =>
-											deleteAction({ id: item.id, type: "request" }),
+											deleteAction({
+												id: item.id,
+												type: "request",
+											}),
 										)
 									}
 								/>
@@ -267,15 +350,23 @@ export default function FriendsScreen() {
 							contentContainerStyle={styles.contentScroll}
 						>
 							{suggestions
-								?.filter((user: any) => !hiddenSuggestions.includes(user.id))
+								?.filter(
+									(user: any) =>
+										!hiddenSuggestions.includes(user.id),
+								)
 								.map((user: any) => (
 									<FriendCard
 										key={`rec-${user.id}`}
 										user={mapSuggestion(user)}
 										variant="recommendation"
-										onPrimaryPress={() => handleAcceptSuggestion(user.id)}
+										onPrimaryPress={() =>
+											handleAcceptSuggestion(user.id)
+										}
 										onSecondaryPress={() =>
-											setHiddenSuggestions((prev) => [...prev, user.id])
+											setHiddenSuggestions((prev) => [
+												...prev,
+												user.id,
+											])
 										}
 									/>
 								))}

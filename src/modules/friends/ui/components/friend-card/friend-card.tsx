@@ -32,7 +32,6 @@ export function FriendCard({
 	};
 
 	const handleCardPress = () => {
-		
 		router.push(`/core/${user.id}`);
 	};
 
@@ -59,7 +58,16 @@ export function FriendCard({
 						title={getPrimaryText()}
 						onPress={(e) => {
 							e.stopPropagation?.();
-							onPrimaryPress();
+							if (variant === "friend") {
+								router.push("/core/chats");
+							} else if (
+								variant === "request" ||
+								variant === "recommendation"
+							) {
+								handleCardPress();
+							} else {
+								onPrimaryPress();
+							}
 						}}
 						style={styles.fullWidthBtn}
 						textStyle={styles.btnText}

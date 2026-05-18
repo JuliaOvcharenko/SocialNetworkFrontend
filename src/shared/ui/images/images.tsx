@@ -23,6 +23,7 @@ import { LikeButton } from "./_images/buttonIcons/like";
 import { HeartButton } from "./_images/buttonIcons/heart";
 import { MoreButton } from "./_images/buttonIcons/more";
 import { EyePButton } from "./_images/buttonIcons/eyeP";
+import { BackButton } from "./_images/buttonIcons/backButton";
 
 export const IMAGES = {
     LogoImage,
@@ -49,5 +50,6 @@ export const IMAGES = {
     LikeButton,
     HeartButton,
     MoreButton,
-    EyePButton
+    EyePButton,
+    BackButton
 }
