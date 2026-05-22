@@ -1,24 +1,53 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
 	View,
 	Text,
 	TouchableOpacity,
 	ScrollView,
 	StyleSheet,
+	ActivityIndicator,
+	Image,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { COLOURS } from "@shared/constants/colours";
 import { Header } from "@shared/ui/header/header";
 import { IMAGES } from "../../../shared/ui/images";
+import { SelectUsersModal } from "@shared/ui/modals/select-users-modal";
+import {
+	GroupDetailsModal,
+	GroupDetailsData,
+} from "@shared/ui/modals/group-details-modal";
+import { useGetAllFriendsQuery } from "@modules/friends/api/friend.api";
+import { getCurrentUserId } from "@shared/api/getCurrentUserId";
+import { IUser } from "@modules/friends/api/friend.types";
+import { BASE_URL } from "@shared/config/api.config";
+import { SearchInput } from "@shared/ui/searchInput/searchInput";
 
-const CONTACTS = [
-	{ id: "1", name: "Jane Cooper" },
-	{ id: "2", name: "Cameron Williamson" },
-	{ id: "3", name: "Leslie Alexander" },
-	{ id: "4", name: "Robert Fox" },
-	{ id: "5", name: "Jacob Jones" },
-	{ id: "6", name: "Brooklyn Simmons" },
-	{ id: "7", name: "Brooklyn Simmons" },
+const GROUP_CHATS = [
+	{
+		id: "1",
+		name: "Команда проекту",
+		text: "Привіт всім!",
+		time: "10:30",
+		online: false,
+		unread: 5,
+	},
+	{
+		id: "2",
+		name: "New Group",
+		text: "Чудово!",
+		time: "10:30",
+		online: false,
+		unread: 0,
+	},
+	{
+		id: "3",
+		name: "Робота",
+		text: "Зустріч о 15:00",
+		time: "25.04.2025",
+		online: false,
+		unread: 0,
+	},
 ];
 
 const MESSAGES = [
@@ -29,7 +58,6 @@ const MESSAGES = [
 		time: "09:41",
 		online: true,
 		unread: 2,
-		active: true,
 	},
 	{
 		id: "2",
@@ -38,7 +66,6 @@ const MESSAGES = [
 		time: "25.04.2025",
 		online: false,
 		unread: 0,
-		active: false,
 	},
 	{
 		id: "3",
@@ -47,7 +74,6 @@ const MESSAGES = [
 		time: "25.04.2025",
 		online: false,
 		unread: 0,
-		active: false,
 	},
 	{
 		id: "4",
@@ -56,7 +82,6 @@ const MESSAGES = [
 		time: "25.04.2025",
 		online: false,
 		unread: 0,
-		active: false,
 	},
 	{
 		id: "5",
@@ -65,42 +90,28 @@ const MESSAGES = [
 		time: "25.04.2025",
 		online: false,
 		unread: 0,
-		active: false,
 	},
 ];
 
-const GROUP_CHATS = [
-	{
-		id: "1",
-		name: "Команда проекту",
-		text: "Привіт всім!",
-		time: "10:30",
-		online: false,
-		unread: 5,
-		active: false,
-	},
-	{
-		id: "2",
-		name: "New Group",
-		text: "Чудово!",
-		time: "10:30",
-		online: false,
-		unread: 0,
-		active: false,
-	},
-	{
-		id: "3",
-		name: "Робота",
-		text: "Зустріч о 15:00",
-		time: "25.04.2025",
-		online: false,
-		unread: 0,
-		active: false,
-	},
-];
+function photoUri(url: string): string {
+	if (!url) return "";
+	if (url.startsWith("http")) return url;
+	const filename = url.split("/").pop();
+	return `${BASE_URL}/media/shakal/${filename}`;
+}
 
-function Avatar({ size = 52 }: { size?: number }) {
-	return (
+function getActiveAvatar(avatars: IUser["avatars"]): string {
+	const active = avatars?.find((a) => a.isActive);
+	return active ? photoUri(active.image.normalImageURL) : "";
+}
+
+function Avatar({ size = 52, uri }: { size?: number; uri?: string }) {
+	return uri ? (
+		<Image
+			source={{ uri }}
+			style={{ width: size, height: size, borderRadius: size / 2 }}
+		/>
+	) : (
 		<View
 			style={[
 				styles.avatar,
@@ -110,7 +121,33 @@ function Avatar({ size = 52 }: { size?: number }) {
 	);
 }
 
-function ContactsTab() {
+function ContactsTab({
+	users,
+	isLoading,
+}: {
+	users: IUser[];
+	isLoading: boolean;
+}) {
+	const [search, setSearch] = useState("");
+
+	const filtered = useMemo(() => {
+		if (!search.trim()) return users;
+		const q = search.toLowerCase();
+		return users.filter(
+			(u) =>
+				u.name.toLowerCase().includes(q) ||
+				u.surname.toLowerCase().includes(q),
+		);
+	}, [search, users]);
+
+	if (isLoading) {
+		return (
+			<View style={[styles.panel, { padding: 32, alignItems: "center" }]}>
+				<ActivityIndicator size="large" color={COLOURS.Plum} />
+			</View>
+		);
+	}
+
 	return (
 		<View style={styles.panel}>
 			<View style={styles.panelHeader}>
@@ -120,14 +157,24 @@ function ContactsTab() {
 				/>
 				<Text style={styles.panelTitle}>Контакти</Text>
 			</View>
-			{CONTACTS.map((contact) => (
+			<View style={styles.panelHeaderSearch}>
+				<SearchInput
+					value={search}
+					onChangeText={setSearch}
+					placeholder="Пошук"
+					style={{ width: 370 }}
+				/>
+			</View>
+			{filtered.map((user) => (
 				<TouchableOpacity
-					key={contact.id}
+					key={user.id}
 					style={styles.contactRow}
 					activeOpacity={0.7}
 				>
-					<Avatar />
-					<Text style={styles.contactName}>{contact.name}</Text>
+					<Avatar uri={getActiveAvatar(user.avatars)} />
+					<Text style={styles.contactName}>
+						{user.name} {user.surname}
+					</Text>
 				</TouchableOpacity>
 			))}
 		</View>
@@ -135,6 +182,9 @@ function ContactsTab() {
 }
 
 function MessagesTab() {
+	const router = useRouter();
+	const [search, setSearch] = useState("");
+
 	return (
 		<View style={styles.panel}>
 			<View style={styles.panelHeader}>
@@ -144,11 +194,22 @@ function MessagesTab() {
 				/>
 				<Text style={styles.panelTitle}>Повідомлення</Text>
 			</View>
+			<View style={styles.panelHeaderSearch}>
+				<SearchInput
+					value={search}
+					onChangeText={setSearch}
+					placeholder="Пошук"
+					style={{ width: 370 }}
+				/>
+			</View>
 			{MESSAGES.map((msg) => (
 				<TouchableOpacity
 					key={msg.id}
 					style={styles.messageRow}
 					activeOpacity={0.7}
+					onPress={() =>
+						router.push(`/core/chat?id=${msg.id}&fromTab=messages`)
+					}
 				>
 					<View style={styles.avatarWrapper}>
 						<Avatar size={52} />
@@ -180,6 +241,7 @@ function MessagesTab() {
 
 function GroupChatsTab() {
 	const router = useRouter();
+	const [search, setSearch] = useState("");
 
 	return (
 		<View style={styles.panel}>
@@ -190,12 +252,24 @@ function GroupChatsTab() {
 				/>
 				<Text style={styles.panelTitle}>Групові чати</Text>
 			</View>
+			<View style={styles.panelHeaderSearch}>
+				<SearchInput
+					value={search}
+					onChangeText={setSearch}
+					placeholder="Пошук"
+					style={{ width: 370 }}
+				/>
+			</View>
 			{GROUP_CHATS.map((msg) => (
 				<TouchableOpacity
 					key={msg.id}
 					style={styles.messageRow}
 					activeOpacity={0.7}
-					onPress={() => router.push(`/chat/${msg.id}`)}
+					onPress={() =>
+						router.push(
+							`/core/chat?id=${msg.id}&fromTab=groupChats`,
+						)
+					}
 				>
 					<View style={styles.avatarWrapper}>
 						<Avatar size={52} />
@@ -226,11 +300,48 @@ function GroupChatsTab() {
 }
 
 export default function FriendsScreen() {
+	const { tab } = useLocalSearchParams<{ tab?: string }>();
+
 	const [activeTab, setActiveTab] = useState<
 		"contacts" | "messages" | "groupChats"
-	>("contacts");
+	>((tab as "contacts" | "messages" | "groupChats") ?? "contacts");
 
+	useEffect(() => {
+		if (tab && ["contacts", "messages", "groupChats"].includes(tab)) {
+			setActiveTab(tab as "contacts" | "messages" | "groupChats");
+		}
+	}, [tab]);
 
+	const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
+	const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+	const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+	const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+
+	useEffect(() => {
+		getCurrentUserId().then((id) => setCurrentUserId(id));
+	}, []);
+
+	const { data: friendsResponse, isLoading } = useGetAllFriendsQuery();
+
+	const friendsList: IUser[] = useMemo(() => {
+		if (!friendsResponse || !currentUserId) return [];
+		return friendsResponse
+			.map((friendship) => {
+				const isMeFrom = friendship.from_profile === currentUserId;
+				const friendProfile = isMeFrom
+					? friendship.toProfileRel
+					: friendship.fromProfileRel;
+				return {
+					id: friendProfile?.id || 0,
+					name: friendProfile?.name || "Невідомий",
+					surname: friendProfile?.surname || "",
+					nickname: friendProfile?.nickname || "",
+					avatars: friendProfile?.avatars || [],
+					isOnline: friendProfile?.isOnline || false,
+				};
+			})
+			.filter((user) => user.id !== 0);
+	}, [friendsResponse, currentUserId]);
 
 	const tabs = [
 		{
@@ -253,9 +364,37 @@ export default function FriendsScreen() {
 		},
 	] as const;
 
+	const handleSelectSave = (ids: number[]) => {
+		setSelectedUserIds(ids);
+		setIsSelectModalOpen(false);
+		setIsDetailsModalOpen(true);
+	};
+
+	const handleRemoveUser = (idToRemove: number) => {
+		setSelectedUserIds((prev) => prev.filter((id) => id !== idToRemove));
+	};
+
+	const handleAddMore = () => {
+		setIsDetailsModalOpen(false);
+		setIsSelectModalOpen(true);
+	};
+
+	const handleCreateGroup = (data: GroupDetailsData) => {
+		setIsDetailsModalOpen(false);
+		setSelectedUserIds([]);
+	};
+
+	const selectedUsersData = friendsList.filter((user) =>
+		selectedUserIds.includes(user.id),
+	);
+
 	return (
 		<View style={styles.container}>
-			<Header showCreateButton showLogoutButton />
+			<Header
+				showCreateButton
+				showLogoutButton
+				onCreatePress={() => setIsSelectModalOpen(true)}
+			/>
 
 			<View style={styles.tabsContainer}>
 				{tabs.map((tab) => {
@@ -290,19 +429,38 @@ export default function FriendsScreen() {
 				contentContainerStyle={styles.scrollContent}
 				showsVerticalScrollIndicator={false}
 			>
-				{activeTab === "contacts" && <ContactsTab />}
+				{activeTab === "contacts" && (
+					<ContactsTab users={friendsList} isLoading={isLoading} />
+				)}
 				{activeTab === "messages" && <MessagesTab />}
 				{activeTab === "groupChats" && <GroupChatsTab />}
 			</ScrollView>
+
+			<SelectUsersModal
+				visible={isSelectModalOpen}
+				onClose={() => setIsSelectModalOpen(false)}
+				users={friendsList}
+				onSave={handleSelectSave}
+				title="Нова група"
+				buttonText="Далі"
+			/>
+
+			<GroupDetailsModal
+				visible={isDetailsModalOpen}
+				onClose={() => setIsDetailsModalOpen(false)}
+				selectedUsers={selectedUsersData}
+				onRemoveUser={handleRemoveUser}
+				onAddMore={handleAddMore}
+				onSubmit={handleCreateGroup}
+				title="Нова група"
+				buttonText="Створити групу"
+			/>
 		</View>
 	);
 }
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: "#fff",
-	},
+	container: { flex: 1, backgroundColor: "#fff" },
 	tabsContainer: {
 		flexDirection: "row",
 		borderBottomWidth: 1,
@@ -317,17 +475,9 @@ const styles = StyleSheet.create({
 		position: "relative",
 		gap: 4,
 	},
-	iconWrapper: {
-		position: "relative",
-	},
-	icon: {
-		width: 16,
-		height: 16,
-	},
-	iconContacts: {
-		width: 22,
-		height: 16,
-	},
+	iconWrapper: { position: "relative" },
+	icon: { width: 16, height: 16 },
+	iconContacts: { width: 22, height: 16 },
 	badge: {
 		position: "absolute",
 		top: -6,
@@ -340,15 +490,8 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		paddingHorizontal: 4,
 	},
-	badgeText: {
-		color: "#fff",
-		fontSize: 10,
-		fontWeight: "600",
-	},
-	tabTextActive: {
-		color: COLOURS.darkBlue,
-		fontWeight: "600",
-	},
+	badgeText: { color: "#fff", fontSize: 10, fontWeight: "600" },
+	tabTextActive: { color: COLOURS.darkBlue, fontWeight: "600" },
 	indicator: {
 		position: "absolute",
 		top: 0,
@@ -358,11 +501,7 @@ const styles = StyleSheet.create({
 		height: 2,
 		backgroundColor: COLOURS.Plum,
 	},
-	scrollContent: {
-		paddingHorizontal: 2,
-		paddingTop: 12,
-		paddingBottom: 24,
-	},
+	scrollContent: { paddingHorizontal: 2, paddingTop: 12, paddingBottom: 24 },
 	panel: {
 		backgroundColor: "#fff",
 		borderRadius: 10,
@@ -378,31 +517,14 @@ const styles = StyleSheet.create({
 		paddingTop: 16,
 		paddingBottom: 12,
 	},
-	panelTitle: {
-		fontSize: 18,
-		fontWeight: "500",
-		color: COLOURS.Blue50,
-	},
-	headerBadge: {
-		position: "absolute",
-		top: -6,
-		right: -10,
-		backgroundColor: COLOURS.Plum,
-		borderRadius: 10,
-		minWidth: 18,
-		height: 18,
+	panelHeaderSearch: {
+		flexDirection: "row",
 		alignItems: "center",
-		justifyContent: "center",
-		paddingHorizontal: 4,
+		paddingHorizontal: 16,
+		paddingBottom: 12,
 	},
-	headerBadgeText: {
-		color: "#fff",
-		fontSize: 10,
-		fontWeight: "700",
-	},
-	avatar: {
-		backgroundColor: "#e5e7eb",
-	},
+	panelTitle: { fontSize: 18, fontWeight: "500", color: COLOURS.Blue50 },
+	avatar: { backgroundColor: "#e5e7eb" },
 	contactRow: {
 		flexDirection: "row",
 		alignItems: "center",
@@ -410,11 +532,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 16,
 		paddingVertical: 10,
 	},
-	contactName: {
-		fontSize: 15,
-		fontWeight: "500",
-		color: "#111",
-	},
+	contactName: { fontSize: 15, fontWeight: "500", color: "#111" },
 	messageRow: {
 		flexDirection: "row",
 		alignItems: "center",
@@ -422,9 +540,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 16,
 		paddingVertical: 10,
 	},
-	avatarWrapper: {
-		position: "relative",
-	},
+	avatarWrapper: { position: "relative" },
 	onlineDot: {
 		position: "absolute",
 		bottom: 2,
@@ -435,26 +551,14 @@ const styles = StyleSheet.create({
 		borderWidth: 2,
 		borderColor: "#fff",
 	},
-	messageContent: {
-		flex: 1,
-	},
+	messageContent: { flex: 1 },
 	messageTop: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
 		marginBottom: 2,
 	},
-	messageName: {
-		fontSize: 14,
-		fontWeight: "600",
-		color: "#111",
-	},
-	messageTime: {
-		fontSize: 12,
-		color: "#9ca3af",
-	},
-	messageText: {
-		fontSize: 13,
-		color: "#6b7280",
-	},
+	messageName: { fontSize: 14, fontWeight: "600", color: "#111" },
+	messageTime: { fontSize: 12, color: "#9ca3af" },
+	messageText: { fontSize: 13, color: "#6b7280" },
 });

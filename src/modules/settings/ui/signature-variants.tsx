@@ -5,32 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { COLOURS } from "@shared/constants/colours";
 import { IMAGES } from "@shared/ui/images"; 
 import { Button } from "@shared/ui/button";
-
-interface CheckboxProps {
-    isSelected: boolean;
-    label: string;
-    onPress: () => void;
-    isEditing: boolean;
-}
-
-const CustomCheckboxRow = ({ isSelected, label, onPress, isEditing }: CheckboxProps) => (
-    <TouchableOpacity 
-        style={[styles.checkboxContainer, { opacity: isEditing ? 1 : 0.5 }]} 
-        onPress={onPress} 
-        disabled={!isEditing}
-        activeOpacity={0.7}
-    >
-        <View style={styles.customCheckboxFrame}>
-            {isSelected && (
-                <IMAGES.CheckBoxTrue style={styles.checkmarkIcon} />
-            )}
-        </View>
-        
-        <Text style={styles.checkboxLabel}>
-            {label}
-        </Text>
-    </TouchableOpacity>
-);
+import { CustomCheckboxRow } from '@shared/ui/custom-checkbox-row/custom-checkbox-row';
 
 interface SignatureVariantsProps {
     isEditing: boolean;
@@ -92,7 +67,7 @@ export function SignatureVariants({
                 />
                 
                 {isEditing ? (
-                    <View>
+                    <View style={styles.editSignatureContainer}>
                         <View style={styles.dashedContainer}>
                             {signatureImageUri ? (
                                 <Image source={{ uri: signatureImageUri }} style={styles.signatureImage} resizeMode="contain" />
@@ -108,7 +83,6 @@ export function SignatureVariants({
                                 variant="outline" 
                             />
                         </View>
-                        
                     </View>
                 ) : (
                     <View style={styles.viewContainer}>
@@ -129,36 +103,11 @@ const styles = StyleSheet.create({
     variantBlock: {
         marginBottom: 24, 
     },
-    checkboxContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12, 
-    },
-    customCheckboxFrame: {
-        width: 20,
-        height: 20,
-        borderWidth: 2,
-        borderColor: COLOURS.Plum,
-        borderRadius: 4, 
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 10,
-        backgroundColor: 'transparent',
-    },
-    checkmarkIcon: {
-        width: 15, 
-        height: 15,
-    },
-    checkboxLabel: {
-        fontSize: 16, 
-        fontWeight: '500', 
-        color: COLOURS.Plum, 
-    },
     aliasText: {
         fontSize: 16,
-        fontWeight: '400',
+        fontFamily: 'Wals-Medium',
         color: COLOURS.darkBlue, 
-        marginLeft: 34,
+        marginLeft: 34, // Відступ під чекбокс
     },
     signatureImage: {
         width: '100%',
@@ -166,6 +115,9 @@ const styles = StyleSheet.create({
     },
     viewContainer: {
         paddingLeft: 34, 
+    },
+    editSignatureContainer: {
+        paddingLeft: 34,
     },
     dashedContainer: {
         width: '100%',
@@ -181,6 +133,7 @@ const styles = StyleSheet.create({
     },
     placeholderText: {
         fontSize: 12,
+        fontFamily: 'Wals-Medium',
         color: COLOURS.Gray, 
     },
     buttonWrapper: {
