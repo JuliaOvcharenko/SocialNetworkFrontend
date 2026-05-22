@@ -36,7 +36,7 @@ export function Input({
             ]}>
                 <TextInput 
                     style={[styles.input, style, !editable && { color: COLOURS.Gray }]} 
-                    placeholderTextColor={COLOURS.Gray} 
+                    placeholderTextColor={COLOURS.Gray50} 
                     secureTextEntry={isSecure}
                     editable={editable}
                     textAlignVertical="center"

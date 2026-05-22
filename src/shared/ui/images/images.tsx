@@ -24,6 +24,7 @@ import { HeartButton } from "./_images/buttonIcons/heart";
 import { MoreButton } from "./_images/buttonIcons/more";
 import { EyePButton } from "./_images/buttonIcons/eyeP";
 import { BackButton } from "./_images/buttonIcons/backButton";
+import { SearchIcon } from "./_images/searchIcon";
 
 export const IMAGES = {
     LogoImage,
@@ -51,5 +52,6 @@ export const IMAGES = {
     HeartButton,
     MoreButton,
     EyePButton,
-    BackButton
+    BackButton,
+    SearchIcon
 }
