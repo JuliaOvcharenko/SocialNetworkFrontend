@@ -9,6 +9,7 @@ import {
 	Image,
 	TextInput,
 	Animated,
+	Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Input } from "@shared/ui/input";
@@ -53,6 +54,7 @@ export function CreatePostModal({
 
 	const [createPost, { isLoading: isCreating }] = useCreatePostMutation();
 	const [updatePost, { isLoading: isUpdating }] = useUpdatePostMutation();
+	const isSubmittingRef = useRef(false);
 	const [uploadPostImage] = useUploadPostImageMutation();
 	const isPublishing = isCreating || isUpdating;
 
@@ -65,9 +67,10 @@ export function CreatePostModal({
 		setTags(initialData.tags ?? []);
 		setLinks(initialData.links?.map((l: { url: string }) => l.url) ?? []);
 		setExistingImageUrls(
-			initialData.images?.map((url: string) =>
-				url.startsWith("http") ? url : `${BASE_URL}${url}`,
-			) ?? [],
+			initialData.images?.map((img) => {
+				const url = img.compressedImage || img.originalImage;
+				return url.startsWith("http") ? url : `${BASE_URL}${url}`;
+			}) ?? [],
 		);
 		setPhotos([]);
 	}, [isVisible, initialData]);
@@ -156,34 +159,34 @@ export function CreatePostModal({
 	};
 
 	const handlePublish = async () => {
+		if (isSubmittingRef.current) return;
+		isSubmittingRef.current = true;
+
 		try {
-			const uploadedUrls: string[] = [];
-
-			for (const uri of photos) {
-				const formData = new FormData();
-				formData.append("image", {
-					uri,
-					name: uri.split("/").pop() ?? "photo.jpg",
-					type: "image/jpeg",
-				} as any);
-
-				const result = await uploadPostImage(formData).unwrap();
-				uploadedUrls.push(result.url);
-			}
+			const uploadedUrls = await Promise.all(
+				photos.map(async (uri) => {
+					const formData = new FormData();
+					formData.append("image", {
+						uri,
+						name: uri.split("/").pop() ?? "photo.jpg",
+						type: "image/jpeg",
+					} as any);
+					const result = await uploadPostImage(formData).unwrap();
+					return result.url;
+				}),
+			);
 
 			const finalLinks = [...links];
 			if (currentLink.trim().length > 0) {
 				finalLinks.push(currentLink.trim());
 			}
 
-			const allImageUrls = [...existingImageUrls, ...uploadedUrls];
-
 			const payload = {
 				title,
 				content: postText,
 				topic: topic || undefined,
 				tags,
-				imageUrls: allImageUrls,
+				imageUrls: [...existingImageUrls, ...uploadedUrls],
 				links: finalLinks.map((url) => ({ url })),
 			};
 
@@ -198,7 +201,10 @@ export function CreatePostModal({
 
 			handleClose();
 		} catch (error) {
-			throw error;
+			console.error("PUBLISH FAIL:", error);
+			Alert.alert("Помилка", "Не вдалось опублікувати пост");
+		} finally {
+			isSubmittingRef.current = false;
 		}
 	};
 
@@ -458,7 +464,10 @@ export function CreatePostModal({
 										style={styles.publishButton}
 										textStyle={styles.publishButtonText}
 										onPress={handlePublish}
-										disabled={isPublishing}
+										disabled={
+											isPublishing ||
+											isSubmittingRef.current
+										}
 									/>
 								</View>
 							</ScrollView>

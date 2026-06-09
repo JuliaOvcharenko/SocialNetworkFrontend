@@ -1,36 +1,50 @@
-import { User } from "@modules/auth/api/api.types";
-
 export interface IUser {
-	id: number;
-	name: string;
-	surname: string;
-	nickname: string;
-	avatars: Array<{
-		isActive: boolean;
-		image: {
-			normalImageURL: string;
-		};
-	}>;
-	isOnline?: boolean;
+	id: string;
+	firstName: string | null;
+	lastName: string | null;
+	username: string | null;
+	email: string;
+	profile: {
+		id: string;
+		avatar: string | null;
+		pseudonym: string | null;
+		userId: string;
+	} | null;
+}
+
+export interface IProfile {
+	id: string;
+	avatar: string | null;
+	pseudonym: string | null;
+	userId: string;
+	user?: {
+		id: string;
+		firstName: string | null;
+		lastName: string | null;
+		username: string | null;
+		email: string;
+	};
 }
 
 export interface IFriendship {
-	id: number;
-	status: string;
+	toProfileRel: any;
 	from_profile: number;
-	to_profile: number;
+	id: string;
+	status: string;
+	from_user_id: string;
+	to_user_id: string;
 	created_at: string;
+	fromUser?: IUser;
+	toUser?: IUser;
 }
 
-export type FriendshipWithProfile = IFriendship & {
-	fromProfileRel?: IUser;
-	toProfileRel?: IUser;
-};
+export interface IFriendsRequest extends IFriendship {}
+export interface IProfileFriend extends IFriendship {}
 
 export interface FriendsOverview {
-	requests: FriendshipWithProfile[];
-	suggestions: User[];
-	friends: FriendshipWithProfile[];
+	requests: IFriendship[];
+	suggestions: IUser[];
+	friends: IFriendship[];
 }
 
 export interface SendRequestPayload {

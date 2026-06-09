@@ -28,6 +28,7 @@ import { PasswordForm } from "@modules/settings/ui/password-form";
 
 import {
 	useGetMeQuery,
+	useUpdateProfileMutation,
 	useUploadAvatarMutation,
 } from "@modules/auth/api/user-api";
 import { BASE_URL } from "@shared/config/api.config";
@@ -47,6 +48,7 @@ export default function SettingsScreen() {
 	const [isEditingPersonal, setIsEditingPersonal] = useState(false);
 	const [isEditingPassword, setIsEditingPassword] = useState(false);
 	const [isEditingSignature, setIsEditingSignature] = useState(false);
+	const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
 
 	const [isAliasSelected, setIsAliasSelected] = useState(true);
 	const [isElectronicSelected, setIsElectronicSelected] = useState(true);
@@ -79,36 +81,31 @@ export default function SettingsScreen() {
 	useEffect(() => {
 		if (user) {
 			reset({
-				name: user.name || "",
-				surname: user.surname || "",
+				name: user.firstName || "",
+				surname: user.lastName || "",
 				email: user.email || "",
 				authorAlias:
-					user.authorAlias ||
-					`${user.name || ""} ${user.surname || ""}`.trim() ||
+					user.profile?.pseudonym ||
+					`${user.firstName || ""} ${user.lastName || ""}`.trim() ||
 					"",
-				nickname: user.nickname
-					? user.nickname.startsWith("@")
-						? user.nickname
-						: `@${user.nickname}`
+				nickname: user.username
+					? user.username.startsWith("@")
+						? user.username
+						: `@${user.username}`
 					: "",
-				birthDate: user.birthDate || "",
+				birthDate: user.profile?.birthDate || "",
 				password: "*********",
 			});
 
-			if (user.avatars && user.avatars.length > 0) {
-				const mainAvatar = user.avatars.find((a) => a.isActive);
-				if (mainAvatar) {
-					setAvatarUri(
-						`${BASE_URL}${mainAvatar.image.shakalImageURL}`,
-					);
-				}
+			if (user.profile?.avatar) {
+				setAvatarUri(`${BASE_URL}${user.profile.avatar}`);
 			}
 		}
 	}, [user, reset]);
 
 	const currentAuthorFullName = watch("authorAlias");
 
-	const pickAvatarImage = async (isReplace: boolean, avatarId?: number) => {
+	const pickAvatarImage = async (isReplace: boolean) => {
 		if (!isEditingProfile || isUploading) return;
 
 		const result = await ImagePicker.launchImageLibraryAsync({
@@ -119,29 +116,18 @@ export default function SettingsScreen() {
 		});
 
 		if (result.canceled || !result.assets?.length) return;
-
 		const asset = result.assets[0];
-
 		if (!asset.uri) return;
 
 		const formData = new FormData();
-
 		formData.append("avatar", {
 			uri: asset.uri,
 			name: asset.fileName || "avatar.jpg",
 			type: asset.mimeType || "image/jpeg",
 		} as any);
 
-		if (isReplace && avatarId) {
-			formData.append("avatarId", String(avatarId));
-		}
-
 		try {
-			const res = await uploadAvatar({
-				formData,
-				isMain: !isReplace,
-			}).unwrap();
-
+			const res = await uploadAvatar({ formData, isMain: true }).unwrap();
 			console.log("UPLOAD OK:", res);
 		} catch (e) {
 			console.log("UPLOAD FAIL:", e);
@@ -150,17 +136,31 @@ export default function SettingsScreen() {
 
 	const handleReplacePhoto = () => {
 		if (isUploading) return;
-
-		const currentAvatarId = user?.avatars?.[activeIndex]?.id;
-		if (currentAvatarId) {
-			pickAvatarImage(true, currentAvatarId);
-		}
+		pickAvatarImage(true);
 	};
+
 	const handleProfileEditToggle = async () => {
 		if (isEditingProfile) {
 			const isValid = await trigger(["authorAlias", "nickname"]);
-			if (isValid) setIsEditingProfile(false);
-		} else setIsEditingProfile(true);
+			if (!isValid) return;
+
+			const values = watch();
+			const cleanNickname = values.nickname?.replace("@", "") || "";
+
+			try {
+				await updateProfile({
+					username: cleanNickname,
+					profile: {
+						pseudonym: values.authorAlias,
+					},
+				}).unwrap();
+				setIsEditingProfile(false);
+			} catch (e) {
+				console.log("UPDATE PROFILE FAIL:", e);
+			}
+		} else {
+			setIsEditingProfile(true);
+		}
 	};
 
 	const handlePersonalEditToggle = async () => {
@@ -171,10 +171,26 @@ export default function SettingsScreen() {
 				"birthDate",
 				"email",
 			]);
-			if (isValid) setIsEditingPersonal(false);
-		} else setIsEditingPersonal(true);
-	};
+			if (!isValid) return;
 
+			const values = watch();
+
+			try {
+				await updateProfile({
+					firstName: values.name,
+					lastName: values.surname,
+					profile: {
+						birthDate: values.birthDate,
+					},
+				}).unwrap();
+				setIsEditingPersonal(false);
+			} catch (e) {
+				console.log("UPDATE PERSONAL FAIL:", e);
+			}
+		} else {
+			setIsEditingPersonal(true);
+		}
+	};
 	const handlePasswordEditToggle = async () => {
 		if (isEditingPassword) {
 			const isValid = await trigger(["password", "confirmPassword"]);
@@ -263,22 +279,19 @@ export default function SettingsScreen() {
 									onEditPress={handleProfileEditToggle}
 								/>
 								<ProfileCard
-									avatars={user?.avatars || []}
-									onIndexChange={(index) =>
-										setActiveIndex(index)
-									}
+									avatar={user?.profile?.avatar || null}
 									onAddPhoto={() => pickAvatarImage(false)}
 									onReplacePhoto={handleReplacePhoto}
 									control={control}
 									isEditing={isEditingProfile}
 									authorFullName={
-										user?.authorAlias
-											? user?.authorAlias
-											: `@${user?.nickname}`
+										user?.profile?.pseudonym ||
+										`${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+										""
 									}
 									usernameView={
-										user?.nickname
-											? `@${user?.nickname}`
+										user?.username
+											? `@${user.username}`
 											: ""
 									}
 								/>

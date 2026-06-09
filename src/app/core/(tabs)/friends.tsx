@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import {
-	View,
-	Text,
-	TouchableOpacity,
-	StyleSheet,
-	ScrollView,
-	ActivityIndicator,
+    View,
+    Text,
+    TouchableOpacity,
+    StyleSheet,
+    ScrollView,
+    ActivityIndicator,
 } from "react-native";
 import { COLOURS } from "@shared/constants/colours";
 import { Header } from "@shared/ui/header";
@@ -13,462 +13,363 @@ import { FriendCard } from "@modules/friends/ui/components/friend-card/friend-ca
 import { FriendActionModal } from "@modules/friends/ui/components/friend-action-modal/friend-action-modal";
 import { getCurrentUserId } from "@shared/api/getCurrentUserId";
 import {
-	useAcceptActionMutation,
-	useDeleteActionMutation,
-	useGetAllFriendsQuery,
-	useGetOverviewQuery,
-	useGetRequestsQuery,
-	useGetSuggestionsQuery,
+    useAcceptActionMutation,
+    useDeleteActionMutation,
+    useGetAllFriendsQuery,
+    useGetOverviewQuery,
+    useGetRequestsQuery,
+    useGetSuggestionsQuery,
 } from "@modules/friends/api/friend.api";
-import { BASE_URL } from "@shared/config/api.config";
-
-function photoUri(url: string): string {
-	if (!url) return "";
-	if (url.startsWith("http")) return url;
-	const filename = url.split("/").pop();
-	return `${BASE_URL}/media/shakal/${filename}`;
-}
+import { IFriendship, IUser } from "@modules/friends/api/friend.types";
 
 export default function FriendsScreen() {
-	const [activeTab, setActiveTab] = useState<
-		"main" | "requests" | "recommendations" | "all friends"
-	>("main");
-	const [isModalVisible, setModalVisible] = useState(false);
-	const [modalText, setModalText] = useState("");
-	const [pendingAction, setPendingAction] = useState<(() => void) | null>(
-		null,
-	);
-	const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-	const [hiddenSuggestions, setHiddenSuggestions] = useState<number[]>([]);
+    const [activeTab, setActiveTab] = useState<
+        "main" | "requests" | "recommendations" | "all friends"
+    >("main");
 
-	useEffect(() => {
-		getCurrentUserId().then(setCurrentUserId);
-	}, []);
+    const [isModalVisible, setModalVisible] = useState(false);
+    const [modalText, setModalText] = useState("");
+    const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    const [hiddenSuggestions, setHiddenSuggestions] = useState<string[]>([]);
 
-	const {
-		data: overview,
-		isLoading: overviewLoading,
-		refetch: refetchOverview,
-	} = useGetOverviewQuery(undefined, {
-		skip: activeTab !== "main",
-	});
-	const { data: requests, isLoading: requestsLoading } =
-		useGetRequestsQuery();
-	const {
-		data: suggestions,
-		isLoading: suggestionsLoading,
-		refetch: refetchSuggestions,
-	} = useGetSuggestionsQuery();
-	const { data: friends, isLoading: friendsLoading } =
-		useGetAllFriendsQuery();
+    useEffect(() => {
+        getCurrentUserId().then((id) => setCurrentUserId(String(id)));
+    }, []);
 
-	const [acceptAction] = useAcceptActionMutation();
-	const [deleteAction] = useDeleteActionMutation();
+    const {
+        data: overview,
+        isLoading: overviewLoading,
+        refetch: refetchOverview,
+    } = useGetOverviewQuery(undefined, {
+        skip: activeTab !== "main",
+    });
+    const { data: requests, isLoading: requestsLoading } = useGetRequestsQuery();
+    const {
+        data: suggestions,
+        isLoading: suggestionsLoading,
+        refetch: refetchSuggestions,
+    } = useGetSuggestionsQuery();
+    const { data: friends, isLoading: friendsLoading } = useGetAllFriendsQuery();
 
-	useEffect(() => {
-		if (suggestions) {
-			setHiddenSuggestions([]);
-		}
-	}, [suggestions]);
+    const [acceptAction] = useAcceptActionMutation();
+    const [deleteAction] = useDeleteActionMutation();
 
-	const openModal = (text: string, action: () => void) => {
-		setModalText(text);
-		setPendingAction(() => action);
-		setModalVisible(true);
-	};
+    useEffect(() => {
+        if (suggestions) setHiddenSuggestions([]);
+    }, [suggestions]);
 
-	const handleConfirm = () => {
-		pendingAction?.();
-		setModalVisible(false);
-		setPendingAction(null);
-	};
+    const openModal = (text: string, action: () => void) => {
+        setModalText(text);
+        setPendingAction(() => action);
+        setModalVisible(true);
+    };
 
-	const handleCancel = () => {
-		setModalVisible(false);
-		setPendingAction(null);
-	};
+    const handleConfirm = () => {
+        pendingAction?.();
+        setModalVisible(false);
+        setPendingAction(null);
+    };
 
-	const handleDeleteFriend = async (id: number) => {
-		await deleteAction({ id });
-		refetchSuggestions();
-		if (activeTab === "main") refetchOverview();
-	};
+    const handleCancel = () => {
+        setModalVisible(false);
+        setPendingAction(null);
+    };
 
-	const handleAcceptSuggestion = async (id: number) => {
-		try {
-			const result = await acceptAction({
-				id,
-				type: "suggestion",
-			}).unwrap();
-			console.log("acceptSuggestion result:", result);
-		} catch (e) {
-			console.error("acceptSuggestion error:", e);
-		}
-		refetchSuggestions();
-		if (activeTab === "main") refetchOverview();
-	};
+    const handleDeleteFriend = async (id: string) => {
+        await deleteAction({ id: Number(id) });
+        refetchSuggestions();
+        if (activeTab === "main") refetchOverview();
+    };
 
-	const getAvatarSource = (user: any) => {
-		const activeAvatar =
-			user?.avatars?.find((a: any) => a.isActive) ?? user?.avatars?.[0];
-		const url = activeAvatar?.image?.normalImageURL;
-		return url
-			? { uri: photoUri(url) }
-			: require("../../../assets/Frame1.png");
-	};
+    const handleAcceptSuggestion = async (id: string) => {
+        try {
+            await acceptAction({ id: Number(id), type: "suggestion" }).unwrap();
+        } catch (e) {
+            console.error("acceptSuggestion error:", e);
+        }
+        refetchSuggestions();
+        if (activeTab === "main") refetchOverview();
+    };
 
-	const getFriendFromFriendship = (
-		item: any,
-		variant: "request" | "friend",
-	) => {
-		if (variant === "request") return item.fromProfileRel ?? null;
-		if (!currentUserId)
-			return item.fromProfileRel ?? item.toProfileRel ?? null;
-		return item.from_profile === currentUserId
-			? item.toProfileRel
-			: item.fromProfileRel;
-	};
+    const getUserFromRequest = (item: IFriendship): IUser | null => {
+        return item.fromUser ?? null;
+    };
 
-	const mapFriendship = (item: any, variant: "request" | "friend") => {
-		const user = getFriendFromFriendship(item, variant);
-		return {
-			id: user?.id,
-			avatarUrl: getAvatarSource(user),
-			name: `${user?.name ?? ""} ${user?.surname ?? ""}`.trim() || "",
-			alias: user?.nickname ? `@${user.nickname}` : "",
-			isOnline: user?.isOnline ?? false,
-		};
-	};
+    const getUserFromFriend = (item: IFriendship): IUser | null => {
+        if (!currentUserId) return item.fromUser ?? item.toUser ?? null;
+        const isFromMe = String(item.from_user_id) === String(currentUserId);
+        return isFromMe ? (item.toUser ?? null) : (item.fromUser ?? null);
+    };
 
-	const mapSuggestion = (user: any) => ({
-		id: user?.id,
-		avatarUrl: getAvatarSource(user),
-		name: `${user?.name ?? ""} ${user?.surname ?? ""}`.trim() || "",
-		alias: user?.nickname ? `@${user.nickname}` : "",
-		isOnline: user?.isOnline ?? false,
-	});
+    const renderLoader = () => (
+        <ActivityIndicator style={{ marginTop: 32 }} color={COLOURS.Plum} />
+    );
 
-	const renderLoader = () => (
-		<ActivityIndicator style={{ marginTop: 32 }} color={COLOURS.Plum} />
-	);
+    return (
+        <View style={styles.container}>
+            <Header showSettingsButton showLogoutButton />
 
-	return (
-		<View style={styles.container}>
-			<Header showSettingsButton showLogoutButton />
+            <View style={styles.tabsContainer}>
+                {(["main", "requests", "recommendations", "all friends"] as const).map((tab) => {
+                    const labels = {
+                        main: "Головна",
+                        requests: "Запити",
+                        recommendations: "Рекомендації",
+                        "all friends": "Всі друзі",
+                    };
+                    return (
+                        <TouchableOpacity
+                            key={tab}
+                            style={styles.tab}
+                            onPress={() => setActiveTab(tab)}
+                        >
+                            <Text
+                                style={[
+                                    styles.tabText,
+                                    activeTab === tab && styles.tabTextActive,
+                                ]}
+                            >
+                                {labels[tab]}
+                            </Text>
+                            {activeTab === tab && <View style={styles.indicator} />}
+                        </TouchableOpacity>
+                    );
+                })}
+            </View>
 
-			<View style={styles.tabsContainer}>
-				{(
-					[
-						"main",
-						"requests",
-						"recommendations",
-						"all friends",
-					] as const
-				).map((tab) => {
-					const labels = {
-						main: "Головна",
-						requests: "Запити",
-						recommendations: "Рекомендації",
-						"all friends": "Всі друзі",
-					};
-					return (
-						<TouchableOpacity
-							key={tab}
-							style={styles.tab}
-							onPress={() => setActiveTab(tab)}
-						>
-							<Text
-								style={[
-									styles.tabText,
-									activeTab === tab && styles.tabTextActive,
-								]}
-							>
-								{labels[tab]}
-							</Text>
-							{activeTab === tab && (
-								<View style={styles.indicator} />
-							)}
-						</TouchableOpacity>
-					);
-				})}
-			</View>
+            <View style={styles.contentWrapper}>
+                {activeTab === "main" &&
+                    (overviewLoading ? (
+                        renderLoader()
+                    ) : (
+                        <ScrollView
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={styles.contentScroll}
+                        >
+                            <View style={styles.sectionHeader}>
+                                <Text style={styles.sectionTitle}>Запити</Text>
+                                <TouchableOpacity onPress={() => setActiveTab("requests")}>
+                                    <Text style={styles.sectionLink}>Дивитись всі</Text>
+                                </TouchableOpacity>
+                            </View>
+                            {overview?.requests.slice(0, 2).map((item) => {
+                                const user = getUserFromRequest(item);
+                                if (!user) return null;
+                                return (
+                                    <FriendCard
+                                        key={`main-req-${item.id}`}
+                                        user={user}
+                                        variant="request"
+                                        onPrimaryPress={() => acceptAction({ id: Number(item.id), type: "request" })}
+                                        onSecondaryPress={() =>
+                                            openModal("Відхилити запит?", () =>
+                                                deleteAction({ id: Number(item.id), type: "request" })
+                                            )
+                                        }
+                                    />
+                                );
+                            })}
 
-			<View style={styles.contentWrapper}>
-				{activeTab === "main" &&
-					(overviewLoading ? (
-						renderLoader()
-					) : (
-						<ScrollView
-							showsVerticalScrollIndicator={false}
-							contentContainerStyle={styles.contentScroll}
-						>
-							<View style={styles.sectionHeader}>
-								<Text style={styles.sectionTitle}>Запити</Text>
-								<TouchableOpacity
-									onPress={() => setActiveTab("requests")}
-								>
-									<Text style={styles.sectionLink}>
-										Дивитись всі
-									</Text>
-								</TouchableOpacity>
-							</View>
-							{overview?.requests.slice(0, 2).map((item) => (
-								<FriendCard
-									key={`main-req-${item.id}`}
-									user={mapFriendship(item, "request")}
-									variant="request"
-									onPrimaryPress={() =>
-										acceptAction({
-											id: item.id,
-											type: "request",
-										})
-									}
-									onSecondaryPress={() =>
-										openModal("Відхилити запит?", () =>
-											deleteAction({
-												id: item.id,
-												type: "request",
-											}),
-										)
-									}
-								/>
-							))}
+                            <View style={[styles.sectionHeader, { marginTop: 24 }]}>
+                                <Text style={styles.sectionTitle}>Рекомендації</Text>
+                                <TouchableOpacity onPress={() => setActiveTab("recommendations")}>
+                                    <Text style={styles.sectionLink}>Дивитись всі</Text>
+                                </TouchableOpacity>
+                            </View>
+                            {overview?.suggestions
+                                .filter((user) => !hiddenSuggestions.includes(user.id))
+                                .slice(0, 2)
+                                .map((user) => (
+                                    <FriendCard
+                                        key={`main-rec-${user.id}`}
+                                        user={user}
+                                        variant="recommendation"
+                                        onPrimaryPress={() => handleAcceptSuggestion(user.id)}
+                                        onSecondaryPress={() =>
+                                            setHiddenSuggestions((prev) => [...prev, user.id])
+                                        }
+                                    />
+                                ))}
 
-							<View
-								style={[
-									styles.sectionHeader,
-									{ marginTop: 24 },
-								]}
-							>
-								<Text style={styles.sectionTitle}>
-									Рекомендації
-								</Text>
-								<TouchableOpacity
-									onPress={() =>
-										setActiveTab("recommendations")
-									}
-								>
-									<Text style={styles.sectionLink}>
-										Дивитись всі
-									</Text>
-								</TouchableOpacity>
-							</View>
-							{overview?.suggestions
-								.filter(
-									(user: any) =>
-										!hiddenSuggestions.includes(user.id),
-								)
-								.slice(0, 2)
-								.map((user: any) => (
-									<FriendCard
-										key={`main-rec-${user.id}`}
-										user={mapSuggestion(user)}
-										variant="recommendation"
-										onPrimaryPress={() =>
-											handleAcceptSuggestion(user.id)
-										}
-										onSecondaryPress={() =>
-											setHiddenSuggestions((prev) => [
-												...prev,
-												user.id,
-											])
-										}
-									/>
-								))}
+                            <View style={[styles.sectionHeader, { marginTop: 24 }]}>
+                                <Text style={styles.sectionTitle}>Всі друзі</Text>
+                                <TouchableOpacity onPress={() => setActiveTab("all friends")}>
+                                    <Text style={styles.sectionLink}>Дивитись всі</Text>
+                                </TouchableOpacity>
+                            </View>
+                            {overview?.friends.slice(0, 2).map((item) => {
+                                const user = getUserFromFriend(item);
+                                if (!user) return null;
+                                return (
+                                    <FriendCard
+                                        key={`main-fr-${item.id}`}
+                                        user={user}
+                                        variant="friend"
+                                        onPrimaryPress={() => {}}
+                                        onSecondaryPress={() =>
+                                            openModal("Видалити з друзів?", () =>
+                                                handleDeleteFriend(item.id)
+                                            )
+                                        }
+                                    />
+                                );
+                            })}
+                        </ScrollView>
+                    ))}
 
-							<View
-								style={[
-									styles.sectionHeader,
-									{ marginTop: 24 },
-								]}
-							>
-								<Text style={styles.sectionTitle}>
-									Всі друзі
-								</Text>
-								<TouchableOpacity
-									onPress={() => setActiveTab("all friends")}
-								>
-									<Text style={styles.sectionLink}>
-										Дивитись всі
-									</Text>
-								</TouchableOpacity>
-							</View>
-							{overview?.friends.slice(0, 2).map((item) => (
-								<FriendCard
-									key={`main-fr-${item.id}`}
-									user={mapFriendship(item, "friend")}
-									variant="friend"
-									onPrimaryPress={() => {}}
-									onSecondaryPress={() =>
-										openModal("Видалити з друзів?", () =>
-											handleDeleteFriend(item.id),
-										)
-									}
-								/>
-							))}
-						</ScrollView>
-					))}
+                {activeTab === "requests" &&
+                    (requestsLoading ? (
+                        renderLoader()
+                    ) : (
+                        <ScrollView
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={styles.contentScroll}
+                        >
+                            {requests?.map((item) => {
+                                const user = getUserFromRequest(item);
+                                if (!user) return null;
+                                return (
+                                    <FriendCard
+                                        key={`req-${item.id}`}
+                                        user={user}
+                                        variant="request"
+                                        onPrimaryPress={() => acceptAction({ id: Number(item.id), type: "request" })}
+                                        onSecondaryPress={() =>
+                                            openModal("Відхилити запит?", () =>
+                                                deleteAction({ id: Number(item.id), type: "request" })
+                                            )
+                                        }
+                                    />
+                                );
+                            })}
+                        </ScrollView>
+                    ))}
 
-				{activeTab === "requests" &&
-					(requestsLoading ? (
-						renderLoader()
-					) : (
-						<ScrollView
-							showsVerticalScrollIndicator={false}
-							contentContainerStyle={styles.contentScroll}
-						>
-							{requests?.map((item) => (
-								<FriendCard
-									key={`req-${item.id}`}
-									user={mapFriendship(item, "request")}
-									variant="request"
-									onPrimaryPress={() =>
-										acceptAction({
-											id: item.id,
-											type: "request",
-										})
-									}
-									onSecondaryPress={() =>
-										openModal("Відхилити запит?", () =>
-											deleteAction({
-												id: item.id,
-												type: "request",
-											}),
-										)
-									}
-								/>
-							))}
-						</ScrollView>
-					))}
+                {activeTab === "recommendations" &&
+                    (suggestionsLoading ? (
+                        renderLoader()
+                    ) : (
+                        <ScrollView
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={styles.contentScroll}
+                        >
+                            {suggestions
+                                ?.filter((user) => !hiddenSuggestions.includes(user.id))
+                                .map((user) => (
+                                    <FriendCard
+                                        key={`rec-${user.id}`}
+                                        user={user}
+                                        variant="recommendation"
+                                        onPrimaryPress={() => handleAcceptSuggestion(user.id)}
+                                        onSecondaryPress={() =>
+                                            setHiddenSuggestions((prev) => [...prev, user.id])
+                                        }
+                                    />
+                                ))}
+                        </ScrollView>
+                    ))}
 
-				{activeTab === "recommendations" &&
-					(suggestionsLoading ? (
-						renderLoader()
-					) : (
-						<ScrollView
-							showsVerticalScrollIndicator={false}
-							contentContainerStyle={styles.contentScroll}
-						>
-							{suggestions
-								?.filter(
-									(user: any) =>
-										!hiddenSuggestions.includes(user.id),
-								)
-								.map((user: any) => (
-									<FriendCard
-										key={`rec-${user.id}`}
-										user={mapSuggestion(user)}
-										variant="recommendation"
-										onPrimaryPress={() =>
-											handleAcceptSuggestion(user.id)
-										}
-										onSecondaryPress={() =>
-											setHiddenSuggestions((prev) => [
-												...prev,
-												user.id,
-											])
-										}
-									/>
-								))}
-						</ScrollView>
-					))}
+                {activeTab === "all friends" &&
+                    (friendsLoading ? (
+                        renderLoader()
+                    ) : (
+                        <ScrollView
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={styles.contentScroll}
+                        >
+                            {friends?.map((item) => {
+                                const user = getUserFromFriend(item);
+                                if (!user) return null;
+                                return (
+                                    <FriendCard
+                                        key={`fr-${item.id}`}
+                                        user={user}
+                                        variant="friend"
+                                        onPrimaryPress={() => {}}
+                                        onSecondaryPress={() =>
+                                            openModal("Видалити з друзів?", () =>
+                                                handleDeleteFriend(item.id)
+                                            )
+                                        }
+                                    />
+                                );
+                            })}
+                        </ScrollView>
+                    ))}
+            </View>
 
-				{activeTab === "all friends" &&
-					(friendsLoading ? (
-						renderLoader()
-					) : (
-						<ScrollView
-							showsVerticalScrollIndicator={false}
-							contentContainerStyle={styles.contentScroll}
-						>
-							{friends?.map((item) => (
-								<FriendCard
-									key={`fr-${item.id}`}
-									user={mapFriendship(item, "friend")}
-									variant="friend"
-									onPrimaryPress={() => {}}
-									onSecondaryPress={() =>
-										openModal("Видалити з друзів?", () =>
-											handleDeleteFriend(item.id),
-										)
-									}
-								/>
-							))}
-						</ScrollView>
-					))}
-			</View>
-
-			<FriendActionModal
-				isVisible={isModalVisible}
-				description={modalText}
-				onConfirm={handleConfirm}
-				onCancel={handleCancel}
-			/>
-		</View>
-	);
+            <FriendActionModal
+                isVisible={isModalVisible}
+                description={modalText}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-		backgroundColor: "#FAF8FF",
-	},
-	tabsContainer: {
-		flexDirection: "row",
-		paddingHorizontal: 16,
-		paddingVertical: 20,
-	},
-	tab: {
-		marginRight: 24,
-		paddingVertical: 5,
-		position: "relative",
-	},
-	tabText: {
-		fontSize: 14,
-		color: "#9E9E9E",
-		fontFamily: "Wals-Medium",
-	},
-	tabTextActive: {
-		color: COLOURS.darkBlue,
-		fontFamily: "Wals-Bold",
-	},
-	indicator: {
-		position: "absolute",
-		bottom: -1,
-		left: 0,
-		right: 0,
-		height: 2,
-		backgroundColor: COLOURS.Plum,
-		borderRadius: 1,
-	},
-	contentWrapper: {
-		flex: 1,
-		backgroundColor: COLOURS.white,
-		borderTopLeftRadius: 18,
-		borderTopRightRadius: 18,
-		borderWidth: 1,
-		borderColor: COLOURS.Gray,
-		borderBottomWidth: 0,
-		overflow: "hidden",
-	},
-	contentScroll: {
-		padding: 16,
-		paddingBottom: 100,
-	},
-	sectionHeader: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		alignItems: "center",
-		marginBottom: 16,
-	},
-	sectionTitle: {
-		fontFamily: "Wals-Medium",
-		fontSize: 16,
-		color: COLOURS.Black,
-	},
-	sectionLink: {
-		fontFamily: "Wals-Medium",
-		fontSize: 16,
-		color: COLOURS.Plum,
-	},
+    container: {
+        flex: 1,
+        backgroundColor: "#FAF8FF",
+    },
+    tabsContainer: {
+        flexDirection: "row",
+        paddingHorizontal: 16,
+        paddingVertical: 20,
+    },
+    tab: {
+        marginRight: 24,
+        paddingVertical: 5,
+        position: "relative",
+    },
+    tabText: {
+        fontSize: 14,
+        color: "#9E9E9E",
+        fontFamily: "Wals-Medium",
+    },
+    tabTextActive: {
+        color: COLOURS.darkBlue,
+        fontFamily: "Wals-Bold",
+    },
+    indicator: {
+        position: "absolute",
+        bottom: -1,
+        left: 0,
+        right: 0,
+        height: 2,
+        backgroundColor: COLOURS.Plum,
+        borderRadius: 1,
+    },
+    contentWrapper: {
+        flex: 1,
+        backgroundColor: COLOURS.white,
+        borderTopLeftRadius: 18,
+        borderTopRightRadius: 18,
+        borderWidth: 1,
+        borderColor: COLOURS.Gray,
+        borderBottomWidth: 0,
+        overflow: "hidden",
+    },
+    contentScroll: {
+        padding: 16,
+        paddingBottom: 100,
+    },
+    sectionHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 16,
+    },
+    sectionTitle: {
+        fontFamily: "Wals-Medium",
+        fontSize: 16,
+        color: COLOURS.Black,
+    },
+    sectionLink: {
+        fontFamily: "Wals-Medium",
+        fontSize: 16,
+        color: COLOURS.Plum,
+    },
 });

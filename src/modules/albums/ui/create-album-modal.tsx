@@ -24,9 +24,9 @@ interface CreateAlbumModalProps {
 	onClose: () => void;
 	onSave: (data: {
 		name: string;
-		tag?: string;
-		year?: number;
-		visibility: "public" | "private";
+		theme?: string | null;
+		year?: number | null;
+		isShown: boolean;
 	}) => void;
 }
 
@@ -42,15 +42,15 @@ export const CreateAlbumModal = ({
 		formState: { errors },
 	} = useForm<CreateAlbumFormData>({
 		resolver: yupResolver(createAlbumSchema) as any,
-		defaultValues: { name: "", tag: null, year: null },
+		defaultValues: { name: "", theme: null, year: null },
 	});
 
 	const handleSave = handleSubmit((data) => {
 		onSave({
 			name: data.name,
-			tag: data.tag ?? undefined,
-			year: data.year ?? undefined,
-			visibility: "public",
+			theme: data.theme ?? null,
+			year: data.year ?? null,
+			isShown: true,
 		});
 		reset();
 	});
@@ -132,14 +132,14 @@ export const CreateAlbumModal = ({
 									<Text style={styles.label}>Тег</Text>
 									<Controller
 										control={control}
-										name="tag"
+										name="theme"
 										render={({
 											field: { onChange, value },
 										}) => (
 											<TextInput
 												style={[
 													styles.input,
-													errors.tag &&
+													errors.name &&
 														styles.inputError,
 												]}
 												placeholder="Природа"
@@ -150,9 +150,9 @@ export const CreateAlbumModal = ({
 											/>
 										)}
 									/>
-									{errors.tag && (
+									{errors.name && (
 										<Text style={styles.errorText}>
-											{errors.tag.message}
+											{errors.name.message}
 										</Text>
 									)}
 								</View>

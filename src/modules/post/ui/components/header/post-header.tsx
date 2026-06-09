@@ -21,12 +21,16 @@ export function PostHeader({ author, postId, initialData }: PostHeaderProps) {
 
 	useEffect(() => {
 		getCurrentUserId().then((id) => {
-			setIsOwner(id === author.id);
+			setIsOwner(id === Number(author.id));
 		});
 	}, [author.id]);
 
-	const avatarUri = author.avatarUrl ? `${BASE_URL}${author.avatarUrl}` : null;
-	const signatureUri = author.signatureUrl ? `${BASE_URL}${author.signatureUrl}` : null;
+	const avatarUri = author.avatarUrl
+		? `${BASE_URL}${author.avatarUrl}`
+		: null;
+	const signatureUri = author.signatureUrl
+		? `${BASE_URL}${author.signatureUrl}`
+		: null;
 
 	const handleEdit = () => {
 		setMenuVisible(false);
@@ -39,13 +43,23 @@ export function PostHeader({ author, postId, initialData }: PostHeaderProps) {
 				<View style={styles.userInfo}>
 					<View style={styles.avatarContainer}>
 						{avatarUri ? (
-							<Image source={{ uri: avatarUri }} style={styles.avatar} />
+							<Image
+								source={{ uri: avatarUri }}
+								style={styles.avatar}
+							/>
 						) : (
-							<View style={[styles.avatar, { backgroundColor: "#ccc" }]} />
+							<View
+								style={[
+									styles.avatar,
+									{ backgroundColor: "#ccc" },
+								]}
+							/>
 						)}
-						{author.isOnline && <View style={styles.onlineIndicator} />}
+						{author.isOnline && (
+							<View style={styles.onlineIndicator} />
+						)}
 					</View>
-					<Text style={styles.nickname}>{author.nickname}</Text>
+					<Text style={styles.nickname}>{author.username}</Text>
 				</View>
 				{isOwner && (
 					<TouchableOpacity
@@ -58,7 +72,10 @@ export function PostHeader({ author, postId, initialData }: PostHeaderProps) {
 			</View>
 
 			{signatureUri ? (
-				<Image source={{ uri: signatureUri }} style={styles.signature} />
+				<Image
+					source={{ uri: signatureUri }}
+					style={styles.signature}
+				/>
 			) : null}
 
 			<View style={styles.separator} />

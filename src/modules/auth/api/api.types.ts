@@ -1,4 +1,3 @@
-
 export interface RegPayload {
 	email: string;
 	password: string;
@@ -13,41 +12,55 @@ export interface LoginPayload {
 	password: string;
 }
 
-export interface VerifyDTO{
-    code: string;
+export interface VerifyDTO {
+	code: string;
 }
 
 export interface LoginResponse {
 	token: string;
 }
 
-export interface User {
-    id: number;
-    email: string;
-    
-    name: string | null;
-    surname: string | null;
-    nickname: string | null;
-    
-
-    authorAlias: string | null; 
-    birthDate: string | null; 
-    
-
-    avatars: { 
-        id: number; 
-        isActive: boolean; 
-        isShown: boolean;
-        image: { 
-            id: number;
-            shakalImageURL: string;
-            normalImageURL: string;
-        };
-    }[];
-    
-    lastSeenAt: Date | string;
-    createdAt: Date | string;
-    updatedAt: Date | string;
+export interface UserProfile {
+	id: number;
+	userId: number;
+	birthDate: string | null;
+	signature: string | null;
+	pseudonym: string | null;
+	avatar: string | null;
+	isImageSignature: boolean;
+	isTextSignature: boolean;
 }
 
-export type MeResponse = User
+export interface User {
+	id: number;
+	email: string;
+
+	username: string | null;
+	firstName: string | null;
+	lastName: string | null;
+	signature: string | null;
+
+	dateJoined: string;
+	lastLogin: string;
+
+	isActive: boolean;
+	isStaff: boolean;
+	isSuperuser: boolean;
+
+	profile: UserProfile | null;
+}
+
+export interface UpdateProfilePayload {
+    username?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    signature?: string | null;
+    profile?: {
+        pseudonym?: string | null;
+        birthDate?: string | null;
+        signature?: string | null;
+        avatar?: string | null;
+    };
+}
+
+export type MeResponse = User;

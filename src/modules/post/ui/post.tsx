@@ -14,11 +14,15 @@ interface PostProps {
 export function Post({ post }: PostProps) {
 	return (
 		<View style={styles.postContainer}>
-			<PostHeader author={post.author} postId={post.id} initialData={post} />
+			<PostHeader
+				author={post.author}
+				postId={post.id}
+				initialData={post}
+			/>
 
 			<PostContent
 				title={post.title}
-				text={post.text}
+				topic={post.topic}
 				content={post.content}
 				tags={post.tags}
 				links={post.links}
@@ -27,9 +31,12 @@ export function Post({ post }: PostProps) {
 			<PostGallery images={post.images} />
 
 			<PostFooter
+				postId={post.id}
 				likes={post.likesCount}
+				hearts={post.heartsCount}
 				views={post.viewsCount}
-				isLiked={post.isLikedByMe}
+				isLiked={post.isLiked}
+				isHearted={post.isHearted}
 			/>
 		</View>
 	);

@@ -29,7 +29,7 @@ export default function PublicationsScreen() {
 
             <FlatList
                 data={posts}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => <Post post={item} />}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingTop: 16, paddingBottom: 100 }}

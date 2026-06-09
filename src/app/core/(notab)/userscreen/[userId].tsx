@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
 	View,
 	Text,
@@ -44,6 +44,22 @@ function photoUri(url: string): string {
 	return `${BASE_URL}/media/shakal/${filename}`;
 }
 
+interface IUserProfile {
+	id: number;
+	avatar: string | null;
+	pseudonym: string | null;
+	userId: number;
+}
+
+interface IUser {
+	id: number;
+	firstName: string | null;
+	lastName: string | null;
+	username: string | null;
+	email: string;
+	profile: IUserProfile;
+}
+
 interface StatItemProps {
 	value: string;
 	label: string;
@@ -58,18 +74,20 @@ function StatItem({ value, label }: StatItemProps) {
 	);
 }
 
+type FriendStatus = "none" | "pending_incoming" | "pending_outgoing" | "friend";
+
 export default function UserScreen() {
 	const router = useRouter();
 	const { userId } = useLocalSearchParams<{ userId: string }>();
 
-	const [requestSent, setRequestSent] = useState(false);
+	const [friendStatus, setFriendStatus] = useState<FriendStatus>("none");
 
 	const { data: me } = useGetMeQuery();
 
 	const { data: user, isLoading: userLoading } = useGetUserByIdQuery(
 		Number(userId),
 		{ skip: !userId },
-	);
+	) as { data: IUser | undefined; isLoading: boolean };
 
 	const { data: albums, isLoading: albumsLoading } =
 		useGetAlbumsByUserIdQuery(Number(userId), { skip: !userId });
@@ -86,31 +104,55 @@ export default function UserScreen() {
 	const [acceptAction, { isLoading: accepting }] = useAcceptActionMutation();
 	const [deleteAction, { isLoading: deleting }] = useDeleteActionMutation();
 
-	const friendship = allFriends?.find(
-		(f) =>
-			f.fromProfileRel?.id === Number(userId) ||
-			f.toProfileRel?.id === Number(userId),
-	);
+	useEffect(() => {
+		if (!requests || !allFriends || !me || !userId) return;
+
+		const friend = allFriends.find(
+			(f) =>
+				String(f.from_user_id) === String(userId) ||
+				String(f.to_user_id) === String(userId),
+		);
+
+		const pending = requests.find(
+			(r) =>
+				String(r.from_user_id) === String(userId) ||
+				String(r.to_user_id) === String(userId),
+		);
+
+		if (friend) {
+			setFriendStatus("friend");
+		} else if (pending) {
+			const iSent = String(pending.from_user_id) === String(me.id);
+			setFriendStatus(iSent ? "pending_outgoing" : "pending_incoming");
+		} else {
+			setFriendStatus("none");
+		}
+	}, [requests, allFriends, me, userId]);
 
 	const pendingRequest = requests?.find(
 		(r) =>
-			r.fromProfileRel?.id === Number(userId) ||
-			r.toProfileRel?.id === Number(userId),
+			String(r.from_user_id) === String(userId) ||
+			String(r.to_user_id) === String(userId),
 	);
 
-	const isFriend = !!friendship;
-	const isPending = !!pendingRequest;
-	const iSentRequest = pendingRequest?.fromProfileRel?.id === me?.id;
+	const friendship = allFriends?.find(
+		(f) =>
+			String(f.from_user_id) === String(userId) ||
+			String(f.to_user_id) === String(userId),
+	);
 
-	const getAvatarUrl = () => {
-		const activeAvatar =
-			user?.avatars?.find((a: any) => a.isActive) ?? user?.avatars?.[0];
-		const image = activeAvatar?.image as any;
-		const url = image?.normalImageURL ?? image?.shakalImageURL;
-		return url
-			? { uri: photoUri(url) }
-			: require("../../../assets/Frame1.png");
+	const getAvatarSource = () => {
+		if (!user?.profile?.avatar)
+			return require("@assetsIcons/default-avatar.png");
+		return { uri: photoUri(user.profile.avatar) };
 	};
+
+	const displayName =
+		[user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() ||
+		user?.profile?.pseudonym ||
+		"Без імені";
+
+	const username = user?.username ? `@${user.username}` : "";
 
 	const getAlbumCover = (album: any) => {
 		const image = album?.images?.[0]?.image;
@@ -129,10 +171,10 @@ export default function UserScreen() {
 		.slice(0, 1);
 
 	const handlePrimaryAction = async () => {
-		if (isFriend || isPending) return;
+		if (friendStatus !== "none") return;
 		try {
 			await sendRequest({ targetUserId: Number(userId) }).unwrap();
-			setRequestSent(true);
+			setFriendStatus("pending_outgoing");
 		} catch (e) {}
 	};
 
@@ -140,8 +182,11 @@ export default function UserScreen() {
 		const id = pendingRequest?.id;
 		if (!id) return;
 		try {
-			await acceptAction({ id, type: "request" }).unwrap();
-		} catch (e) {}
+			await acceptAction({ id: Number(id), type: "request" }).unwrap();
+			setFriendStatus("friend");
+		} catch (e) {
+			console.log("accept error:", e);
+		}
 	};
 
 	const handleDeleteAction = async () => {
@@ -149,9 +194,14 @@ export default function UserScreen() {
 		if (!id) return;
 		try {
 			await deleteAction({
-				id,
-				type: isPending ? "request" : undefined,
+				id: Number(id),
+				type:
+					friendStatus === "pending_incoming" ||
+					friendStatus === "pending_outgoing"
+						? "request"
+						: undefined,
 			}).unwrap();
+			setFriendStatus("none");
 		} catch (e) {}
 	};
 
@@ -186,16 +236,14 @@ export default function UserScreen() {
 					</View>
 
 					<View style={styles.avatarWrapper}>
-						<Image source={getAvatarUrl()} style={styles.avatar} />
+						<Image
+							source={getAvatarSource()}
+							style={styles.avatar}
+						/>
 					</View>
 
-					<Text style={styles.displayName}>
-						{`${user?.name ?? ""} ${user?.surname ?? ""}`.trim() ||
-							"Без імені"}
-					</Text>
-					<Text style={styles.username}>
-						{user?.nickname ? `@${user.nickname}` : ""}
-					</Text>
+					<Text style={styles.displayName}>{displayName}</Text>
+					<Text style={styles.username}>{username}</Text>
 
 					<View style={styles.statsRow}>
 						<StatItem
@@ -209,94 +257,60 @@ export default function UserScreen() {
 					</View>
 
 					<View style={styles.buttonsRow}>
-						{!isFriend && !isPending && (
+						{friendStatus === "none" && (
+							<TouchableOpacity
+								style={styles.primaryBtn}
+								activeOpacity={0.8}
+								onPress={handlePrimaryAction}
+								disabled={isActionLoading}
+							>
+								{sending ? (
+									<ActivityIndicator
+										color="#fff"
+										size="small"
+									/>
+								) : (
+									<Text style={styles.primaryBtnText}>
+										Додати в друзі
+									</Text>
+								)}
+							</TouchableOpacity>
+						)}
+
+						{friendStatus === "pending_outgoing" && (
+							<TouchableOpacity
+								style={[
+									styles.primaryBtn,
+									{ backgroundColor: "#9b8a9b" },
+								]}
+								activeOpacity={1}
+								disabled
+							>
+								<Text style={styles.primaryBtnText}>
+									Запит надіслано
+								</Text>
+							</TouchableOpacity>
+						)}
+
+						{friendStatus === "pending_incoming" && (
 							<>
 								<TouchableOpacity
-									style={[
-										styles.primaryBtn,
-										requestSent && {
-											backgroundColor: "#9b8a9b",
-										},
-									]}
-									activeOpacity={requestSent ? 1 : 0.8}
-									onPress={
-										requestSent
-											? undefined
-											: handlePrimaryAction
-									}
-									disabled={isActionLoading || requestSent}
+									style={styles.primaryBtn}
+									activeOpacity={0.8}
+									onPress={handleConfirmAction}
+									disabled={isActionLoading}
 								>
-									{sending ? (
+									{accepting ? (
 										<ActivityIndicator
 											color="#fff"
 											size="small"
 										/>
 									) : (
-										<Text
-											style={styles.primaryBtnText}
-											numberOfLines={1}
-											adjustsFontSizeToFit
-										>
-											{requestSent
-												? "Запит надіслано"
-												: "Додати в друзі"}
-										</Text>
-									)}
-								</TouchableOpacity>
-								<TouchableOpacity
-									style={styles.outlineBtn}
-									activeOpacity={0.8}
-									onPress={handleDeleteAction}
-									disabled={isActionLoading}
-								>
-									{deleting ? (
-										<ActivityIndicator
-											color={ACCENT}
-											size="small"
-										/>
-									) : (
-										<Text style={styles.outlineBtnText}>
-											Видалити
-										</Text>
-									)}
-								</TouchableOpacity>
-							</>
-						)}
-
-						{isPending && (
-							<>
-								{iSentRequest ? (
-									<TouchableOpacity
-										style={[
-											styles.primaryBtn,
-											{ backgroundColor: "#9b8a9b" },
-										]}
-										activeOpacity={1}
-										disabled
-									>
 										<Text style={styles.primaryBtnText}>
-											Запит надіслано
+											Підтвердити
 										</Text>
-									</TouchableOpacity>
-								) : (
-									<TouchableOpacity
-										style={styles.primaryBtn}
-										activeOpacity={0.8}
-										onPress={handleConfirmAction}
-										disabled={isActionLoading}
-									>
-										{accepting ? (
-											<ActivityIndicator
-												color="#fff"
-												size="small"
-											/>
-										) : (
-											<Text style={styles.primaryBtnText}>
-												Підтвердити
-											</Text>
-										)}
-									</TouchableOpacity>
-								)}
+									)}
+								</TouchableOpacity>
 								<TouchableOpacity
 									style={styles.outlineBtn}
 									activeOpacity={0.8}
@@ -317,7 +331,7 @@ export default function UserScreen() {
 							</>
 						)}
 
-						{isFriend && (
+						{friendStatus === "friend" && (
 							<>
 								<TouchableOpacity
 									style={styles.primaryBtnDisabledFriend}
@@ -366,14 +380,7 @@ export default function UserScreen() {
 							</TouchableOpacity>
 						)}
 					</View>
-					<View
-						style={{
-							height: 1,
-							backgroundColor: "#c7cbd2",
-							width: "100%",
-							marginBottom: 16,
-						}}
-					/>
+					<View style={styles.divider} />
 
 					{albumsLoading ? (
 						<ActivityIndicator
@@ -434,14 +441,7 @@ export default function UserScreen() {
 							</TouchableOpacity>
 						)}
 					</View>
-					<View
-						style={{
-							height: 1,
-							backgroundColor: "#c7cbd2",
-							width: "100%",
-							marginBottom: 16,
-						}}
-					/>
+					<View style={styles.divider} />
 
 					{postsLoading ? (
 						<ActivityIndicator
@@ -512,7 +512,13 @@ const styles = StyleSheet.create({
 		letterSpacing: -0.3,
 		marginBottom: 4,
 	},
-	username: { fontSize: 15, color: COLOURS.darkBlue, marginBottom: 22 },
+	username: { fontSize: 15, color: COLOURS.darkBlue, marginBottom: 4 },
+	pseudonym: {
+		fontSize: 13,
+		color: TEXT_SECONDARY,
+		marginBottom: 18,
+		fontStyle: "italic",
+	},
 	statsRow: {
 		flexDirection: "row",
 		alignItems: "center",
@@ -572,6 +578,12 @@ const styles = StyleSheet.create({
 	sectionTitleRow: { flexDirection: "row", alignItems: "center", gap: 7 },
 	sectionTitle: { fontSize: 16, fontWeight: "500", color: COLOURS.Gray50 },
 	sectionLink: { fontSize: 13, color: PLUM, fontWeight: "500" },
+	divider: {
+		height: 1,
+		backgroundColor: "#c7cbd2",
+		width: "100%",
+		marginBottom: 16,
+	},
 	emptyText: {
 		fontSize: 13,
 		color: TEXT_SECONDARY,

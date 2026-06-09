@@ -72,6 +72,27 @@ export const postApi = baseApi.injectEndpoints({
 			}),
 			providesTags: ["Post"],
 		}),
+		toggleLike: builder.mutation<
+			{ liked: boolean; likesCount: number },
+			number
+		>({
+			query: (postId) => ({
+				url: `posts/${postId}/like`,
+				method: "POST",
+			}),
+			invalidatesTags: ["Post"],
+		}),
+
+		toggleHeart: builder.mutation<
+			{ hearted: boolean; heartsCount: number },
+			number
+		>({
+			query: (postId) => ({
+				url: `posts/${postId}/heart`,
+				method: "POST",
+			}),
+			invalidatesTags: ["Post"],
+		}),
 	}),
 });
 
@@ -83,4 +104,6 @@ export const {
 	useDeletePostMutation,
 	useUploadPostImageMutation,
 	useGetUserPostsQuery,
+	useToggleLikeMutation,
+	useToggleHeartMutation,
 } = postApi;

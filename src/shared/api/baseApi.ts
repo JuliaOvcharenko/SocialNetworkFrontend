@@ -8,7 +8,7 @@ export const baseApi = createApi({
 		baseUrl: API_URL,
 		prepareHeaders: queryBaseHeaders,
 	}),
-	tagTypes: ["User", "Album", "Photo", "Post", "Friends"],
+	tagTypes: ["User", "Album", "Photo", "Post", "Friends", "Chats", "Messages"],
 	endpoints: () => ({}),
 });
 

@@ -32,7 +32,15 @@ export function PostOptionsModal({
 				text: "Видалити",
 				style: "destructive",
 				onPress: async () => {
-					const result = await deletePost(postId);
+					try {
+						await deletePost(postId).unwrap();
+					} catch (e) {
+						console.error("DELETE POST FAIL:", e);
+						Alert.alert(
+							"Помилка",
+							"Не вдалось видалити публікацію",
+						);
+					}
 				},
 			},
 		]);

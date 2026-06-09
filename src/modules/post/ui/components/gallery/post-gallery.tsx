@@ -9,11 +9,12 @@ interface PostGalleryProps {
 
 export function PostGallery({ images }: PostGalleryProps) {
 	const validImages = (images ?? []).filter((img) => {
-		const uri = photoUri(typeof img === 'string' ? img : img?.shakalImageURL ?? img?.url ?? '');
+		const uri = photoUri(typeof img === 'string' ? img : img?.compressedImage ?? img?.shakalImageURL ?? img?.url ?? '');
 		return uri.length > 0;
 	});
 
 	if (validImages.length === 0) return null;
+	
 
 	const getRows = (imgs: any[]) => {
 		const len = imgs.length;
@@ -50,7 +51,8 @@ export function PostGallery({ images }: PostGalleryProps) {
 						else if (row.length === 3) imgStyle = styles.imageThird;
 						else imgStyle = styles.imageSingle;
 
-						const uri = photoUri(typeof img === 'string' ? img : img?.shakalImageURL ?? img?.url ?? '');
+						const uri = photoUri(typeof img === 'string' ? img : img?.compressedImage ?? img?.shakalImageURL ?? img?.url ?? '');
+						
 
 						return (
 							<Image

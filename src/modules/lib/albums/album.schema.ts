@@ -6,9 +6,9 @@ export const createAlbumSchema = yup.object({
         .min(2, "Назва має бути не менше 2 символів")
         .max(50, "Назва має бути не більше 50 символів"),
 
-    tag: yup.string()
-        .min(2, "Тег має бути не менше 2 символів")
-        .max(30, "Тег має бути не більше 30 символів")
+    theme: yup.string()         
+        .min(2, "Тема має бути не менше 2 символів")
+        .max(30, "Тема має бути не більше 30 символів")
         .nullable()
         .default(null),
 
@@ -17,6 +17,10 @@ export const createAlbumSchema = yup.object({
         .max(new Date().getFullYear(), `Рік не може бути більшим за ${new Date().getFullYear()}`)
         .nullable()
         .default(null),
+
+    isShown: yup.boolean()       
+        .required()
+        .default(true),
 });
 
 export type CreateAlbumFormData = yup.InferType<typeof createAlbumSchema>;
