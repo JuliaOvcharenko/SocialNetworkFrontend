@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { View, FlatList, ActivityIndicator, Text } from "react-native";
-
-import { FirstLoginModal } from "../../../modules/profile/ui/first-login-modal";
+import { View } from "react-native";
 import { Header } from "@shared/ui/header";
+import { FirstLoginModal } from "@modules/profile/ui/first-login-modal";
+import { CreatePostModal } from "@modules/post/ui/create-post-modal";
 import { FirstLoginFormData } from "@modules/lib/login/first-login-modal.schema";
-
 import {
 	useUpdateProfileMutation,
 	useGetMeQuery,
 } from "@modules/auth/api/user-api";
-import { CreatePostModal } from "@modules/post/ui/create-post-modal";
-import { Post } from "@modules/post/ui/post";
 import { useGetAllPostsQuery } from "@modules/post/api/post.api";
+import { PostFeed } from "@shared/ui/postFeed/postFeed";
 
 export default function MainScreen() {
 	const [isFirstLoginModalVisible, setFirstLoginModalVisible] =
@@ -20,33 +18,22 @@ export default function MainScreen() {
 
 	const { data: user } = useGetMeQuery();
 	const [updateProfile] = useUpdateProfileMutation();
-
-	const {
-		data: postsData,
-		isLoading,
-		isError,
-	} = useGetAllPostsQuery({ page: 1, limit: 5 });
-	const posts = postsData?.data ?? [];
+	const { data, isLoading, isError } = useGetAllPostsQuery({
+		page: 1,
+		limit: 5,
+	});
 
 	useEffect(() => {
-		if (user && !user.username) {
-			setFirstLoginModalVisible(true);
-		}
+		if (user && !user.username) setFirstLoginModalVisible(true);
 	}, [user]);
 
 	const handleFirstLoginSubmit = async (data: FirstLoginFormData) => {
-		try {
-			const cleanNickname = data.nickname.replace("@", "");
-			await updateProfile({
-				username: cleanNickname,
-				profile: {
-					pseudonym: data.authorAlias,
-				},
-			}).unwrap();
-			setFirstLoginModalVisible(false);
-		} catch (error) {
-			throw error;
-		}
+		const cleanNickname = data.nickname.replace("@", "");
+		await updateProfile({
+			username: cleanNickname,
+			profile: { pseudonym: data.authorAlias },
+		}).unwrap();
+		setFirstLoginModalVisible(false);
 	};
 
 	return (
@@ -58,23 +45,10 @@ export default function MainScreen() {
 				onCreatePress={() => setCreateModalVisible(true)}
 			/>
 
-			{isLoading && (
-				<ActivityIndicator style={{ marginTop: 32 }} size="large" />
-			)}
-			{isError && (
-				<Text
-					style={{ textAlign: "center", marginTop: 32, color: "red" }}
-				>
-					Не вдалось завантажити пости
-				</Text>
-			)}
-
-			<FlatList
-				data={posts}
-				keyExtractor={(item) => item.id.toString()}
-				renderItem={({ item }) => <Post post={item} />}
-				showsVerticalScrollIndicator={false}
-				contentContainerStyle={{ paddingTop: 16, paddingBottom: 100 }}
+			<PostFeed
+				posts={data?.data ?? []}
+				isLoading={isLoading}
+				isError={isError}
 			/>
 
 			<FirstLoginModal

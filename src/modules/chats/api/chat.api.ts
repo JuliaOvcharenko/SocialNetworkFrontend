@@ -1,9 +1,15 @@
 import { baseApi } from "@shared/api/baseApi";
-import { IChat, UpdateChatDto } from "./chat.types";
+import { IChat } from "./chat.types";
 
-function normalizeChat(chat: any): IChat {
+interface RawChat {
+	messages?: IChat["lastMessage"][];
+	lastMessage?: IChat["lastMessage"];
+	[key: string]: unknown;
+}
+
+function normalizeChat(chat: RawChat): IChat {
 	return {
-		...chat,
+		...(chat as unknown as IChat),
 		lastMessage: chat.messages?.[0] ?? chat.lastMessage ?? null,
 	};
 }
@@ -12,19 +18,19 @@ export const chatsApi = baseApi.injectEndpoints({
 	endpoints: (builder) => ({
 		getPersonalChats: builder.query<IChat[], void>({
 			query: () => ({ url: "chats/personal-chats" }),
-			transformResponse: (res: any[]) => res.map(normalizeChat),
+			transformResponse: (res: RawChat[]) => res.map(normalizeChat),
 			providesTags: ["Chats"],
 		}),
 
 		getGroupChats: builder.query<IChat[], void>({
 			query: () => ({ url: "chats/group-chats" }),
-			transformResponse: (res: any[]) => res.map(normalizeChat),
+			transformResponse: (res: RawChat[]) => res.map(normalizeChat),
 			providesTags: ["Chats"],
 		}),
 
 		getChatById: builder.query<IChat, number>({
 			query: (chatId) => ({ url: `chats/${chatId}` }),
-			transformResponse: (res: any) => normalizeChat(res),
+			transformResponse: (res: RawChat) => normalizeChat(res),
 			providesTags: ["Chats"],
 		}),
 
@@ -38,7 +44,7 @@ export const chatsApi = baseApi.injectEndpoints({
 				url: `chats/${id}`,
 				method: "PATCH",
 				body: data,
-				formData: true
+				formData: true,
 			}),
 			invalidatesTags: ["Chats"],
 		}),

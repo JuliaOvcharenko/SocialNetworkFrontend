@@ -32,6 +32,8 @@ import {
 import { BASE_URL } from "@shared/config/api.config";
 import { useSocketEvents } from "@modules/chats/hooks/useSocketEvents";
 
+type ActiveTab = "contacts" | "messages" | "groupChats";
+
 function formatTime(dateStr: string): string {
 	if (!dateStr) return "";
 	const d = new Date(dateStr);
@@ -109,7 +111,8 @@ const AVATAR_COLORS = [
 	"#e76f51",
 	"#6a4c93",
 ];
-function getAvatarColor(name: string) {
+
+function getAvatarColor(name: string): string {
 	return AVATAR_COLORS[name.length % AVATAR_COLORS.length];
 }
 
@@ -126,9 +129,7 @@ function getInitials(
 
 function getAutoAvatar(name: string): string {
 	const i = name.trim();
-	function onlyCapitalLetters(str: string) {
-		return str.replace(/[^A-Z]+/g, "");
-	}
+	const onlyCapitalLetters = (str: string) => str.replace(/[^A-Z]+/g, "");
 	if (i.length < 1) return "NG";
 	if (i.split(" ").length > 1) {
 		const n = i.toUpperCase().split(" ");
@@ -303,13 +304,20 @@ function MessagesTab({ currentUserId }: { currentUserId: number | null }) {
 				if (lastMsg) {
 					const senderName = lastMsg.sender?.username ?? "";
 					const prefix = senderName ? `${senderName}: ` : "";
-
 					if (lastMsg.text) lastText = `${prefix}${lastMsg.text}`;
 					else if (
-						(lastMsg as any).messageImages &&
-						(lastMsg as any).messageImages.length > 0
+						(
+							lastMsg as IChat["lastMessage"] & {
+								messageImages?: { id: number }[];
+							}
+						)?.messageImages &&
+						((
+							lastMsg as IChat["lastMessage"] & {
+								messageImages?: { id: number }[];
+							}
+						)?.messageImages?.length ?? 0) > 0
 					)
-						lastText = `${prefix} Фотографія`;
+						lastText = `${prefix}Фотографія`;
 				} else {
 					lastText = `${(chat.users?.length ?? 0) + 1} учасників`;
 				}
@@ -465,8 +473,16 @@ function GroupChatsTab() {
 				if (lastMsg) {
 					if (lastMsg.text) lastText = lastMsg.text;
 					else if (
-						(lastMsg as any).messageImages &&
-						(lastMsg as any).messageImages.length > 0
+						(
+							lastMsg as IChat["lastMessage"] & {
+								messageImages?: { id: number }[];
+							}
+						)?.messageImages &&
+						((
+							lastMsg as IChat["lastMessage"] & {
+								messageImages?: { id: number }[];
+							}
+						)?.messageImages?.length ?? 0) > 0
 					)
 						lastText = "Фотографія";
 				} else {
@@ -532,9 +548,9 @@ export default function ChatsScreen() {
 	const router = useRouter();
 	useSocketEvents();
 	const { tab } = useLocalSearchParams<{ tab?: string }>();
-	const [activeTab, setActiveTab] = useState<
-		"contacts" | "messages" | "groupChats"
-	>((tab as "contacts" | "messages" | "groupChats") ?? "contacts");
+	const [activeTab, setActiveTab] = useState<ActiveTab>(
+		(tab as ActiveTab) ?? "contacts",
+	);
 	const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
 	const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 	const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
@@ -542,8 +558,11 @@ export default function ChatsScreen() {
 	const [createChat, { isLoading: isCreating }] = useCreateChatMutation();
 
 	useEffect(() => {
-		if (tab && ["contacts", "messages", "groupChats"].includes(tab)) {
-			setActiveTab(tab as any);
+		if (
+			tab &&
+			(["contacts", "messages", "groupChats"] as string[]).includes(tab)
+		) {
+			setActiveTab(tab as ActiveTab);
 		}
 	}, [tab]);
 
@@ -602,32 +621,34 @@ export default function ChatsScreen() {
 
 	const tabs = [
 		{
-			key: "contacts",
+			key: "contacts" as const,
 			label: "Контакти",
 			icon: <IMAGES.friendsButton style={styles.iconContacts} />,
 			unread: 0,
 		},
 		{
-			key: "messages",
+			key: "messages" as const,
 			label: "Повідомлення",
 			icon: <IMAGES.chatButton style={styles.icon} />,
 			unread: totalUnreadPersonal,
 		},
 		{
-			key: "groupChats",
+			key: "groupChats" as const,
 			label: "Групові чати",
 			icon: <IMAGES.chatButton style={styles.icon} />,
 			unread: totalUnreadGroup,
 		},
-	] as const;
+	];
 
 	const handleSelectSave = (ids: string[]) => {
 		setSelectedUserIds(ids);
 		setIsSelectModalOpen(false);
 		setIsDetailsModalOpen(true);
 	};
+
 	const handleRemoveUser = (id: string) =>
 		setSelectedUserIds((prev) => prev.filter((i) => i !== id));
+
 	const handleAddMore = () => {
 		setIsDetailsModalOpen(false);
 		setIsSelectModalOpen(true);

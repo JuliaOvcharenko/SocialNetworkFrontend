@@ -5,7 +5,6 @@ import {
 	FriendsOverview,
 	IFriendsRequest,
 	IProfileFriend,
-	IProfile,
 	SendRequestPayload,
 	IFriendship,
 	IUser,

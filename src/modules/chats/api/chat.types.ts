@@ -50,6 +50,13 @@ export interface IChat {
     };
 }
 
+export type SocketCallback = (res: { status: string }) => void;
+
+export interface MessageImage {
+	id: number;
+	image: string;
+}
+
 export interface CreateChatDto {
 	name: string;
 	userIds: number[];

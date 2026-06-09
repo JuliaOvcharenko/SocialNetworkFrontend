@@ -12,7 +12,6 @@ import {
 	ActivityIndicator,
 	Alert,
 } from "react-native";
-import { getCalendars } from "expo-localization";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Header } from "@shared/ui/header";
@@ -36,11 +35,10 @@ import {
 	useUpdateChatMutation,
 	useDeleteChatMutation,
 	useLeaveChatMutation,
-	chatsApi,
 } from "@modules/chats/api/chat.api";
 import { useGetAllFriendsQuery } from "@modules/friends/api/friend.api";
 import { IUser } from "@modules/friends/api/friend.types";
-import { useDispatch } from "react-redux";
+import { MessageImage } from "@modules/chats/api/chat.types";
 
 export function photoUri(url: string): string {
 	if (!url) return "";
@@ -54,7 +52,7 @@ function getInitials(
 	firstName?: string | null,
 	lastName?: string | null,
 	username?: string | null,
-) {
+): string {
 	if (firstName || lastName)
 		return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase();
 	return (username?.[0] ?? "?").toUpperCase();
@@ -64,12 +62,12 @@ function getDisplayName(
 	firstName?: string | null,
 	lastName?: string | null,
 	username?: string | null,
-) {
+): string {
 	const full = [firstName, lastName].filter(Boolean).join(" ").trim();
 	return full || username || "Unknown";
 }
 
-function formatMessageTime(createdAt: string) {
+function formatMessageTime(createdAt: string): string {
 	return new Date(createdAt).toLocaleTimeString("uk-UA", {
 		hour: "2-digit",
 		minute: "2-digit",
@@ -79,9 +77,7 @@ function formatMessageTime(createdAt: string) {
 
 function getAutoAvatar(name: string): string {
 	const i = name.trim();
-	function onlyCapitalLetters(str: string) {
-		return str.replace(/[^A-Z]+/g, "");
-	}
+	const onlyCapitalLetters = (str: string) => str.replace(/[^A-Z]+/g, "");
 	if (i.length < 1) return "NG";
 	if (i.split(" ").length > 1) {
 		const n = i.toUpperCase().split(" ");
@@ -97,19 +93,21 @@ function getAutoAvatar(name: string): string {
 	return i[0].toUpperCase();
 }
 
-const AVATAR_COLORS: Record<string, string> = {};
-function getAvatarColor(name: string) {
-	if (!AVATAR_COLORS[name]) {
-		const colors = [
-			COLOURS.Plum,
-			"#457b9d",
-			"#2a9d8f",
-			"#e76f51",
-			"#6a4c93",
-		];
-		AVATAR_COLORS[name] = colors[name.length % colors.length];
+const AVATAR_COLORS_LIST = [
+	COLOURS.Plum,
+	"#457b9d",
+	"#2a9d8f",
+	"#e76f51",
+	"#6a4c93",
+];
+const AVATAR_COLOR_CACHE: Record<string, string> = {};
+
+function getAvatarColor(name: string): string {
+	if (!AVATAR_COLOR_CACHE[name]) {
+		AVATAR_COLOR_CACHE[name] =
+			AVATAR_COLORS_LIST[name.length % AVATAR_COLORS_LIST.length];
 	}
-	return AVATAR_COLORS[name];
+	return AVATAR_COLOR_CACHE[name];
 }
 
 export default function ChatScreen() {
@@ -119,7 +117,6 @@ export default function ChatScreen() {
 		fromTab?: string;
 	}>();
 	const chatId = Number(id);
-
 	const activeTab =
 		(fromTab as "contacts" | "messages" | "groupChats") ?? "groupChats";
 
@@ -146,12 +143,12 @@ export default function ChatScreen() {
 	useEffect(() => {
 		if (!isConnected) return;
 		markAsRead();
-	}, [isConnected]);
+	}, [isConnected, markAsRead]);
 
 	const allMessages = initialMessages as IMessage[];
 
 	useEffect(() => {
-		getCurrentUserId().then((id) => setCurrentUserId(Number(id)));
+		getCurrentUserId().then((uid) => setCurrentUserId(Number(uid)));
 	}, []);
 
 	useEffect(() => {
@@ -215,22 +212,15 @@ export default function ChatScreen() {
 							uri: asset.uri,
 							name: "image.jpg",
 							type: "image/jpeg",
-						} as any);
-						console.log(
-							"Uploading to:",
-							`${BASE_URL}/api/messages/upload`,
-						);
+						} as unknown as Blob);
 						const response = await fetch(
 							`${BASE_URL}/api/messages/upload`,
-							{
-								method: "POST",
-								body: formData,
-								headers,
-							},
+							{ method: "POST", body: formData, headers },
 						);
-						console.log("Upload status:", response.status);
-						const { url } = await response.json();
-						return url as string;
+						const { url } = (await response.json()) as {
+							url: string;
+						};
+						return url;
 					}),
 				);
 
@@ -260,9 +250,8 @@ export default function ChatScreen() {
 					uri: groupPhotoUri,
 					name: "avatar.jpg",
 					type: "image/jpeg",
-				} as any);
+				} as unknown as Blob);
 			}
-
 			await updateChat({ id: chatId, data: formData }).unwrap();
 			setIsEditModalOpen(false);
 			setGroupPhotoUri(null);
@@ -278,7 +267,7 @@ export default function ChatScreen() {
 				text: "Видалити",
 				style: "destructive",
 				onPress: () =>
-					removeUser(userId, (res) => {
+					removeUser(userId, (res: { status: string }) => {
 						if (res.status !== "ok")
 							Alert.alert(
 								"Помилка",
@@ -368,21 +357,21 @@ export default function ChatScreen() {
 
 	const tabs = [
 		{
-			key: "contacts",
+			key: "contacts" as const,
 			label: "Контакти",
 			icon: <IMAGES.friendsButton style={styles.iconContacts} />,
 		},
 		{
-			key: "messages",
+			key: "messages" as const,
 			label: "Повідомлення",
 			icon: <IMAGES.chatButton style={styles.icon} />,
 		},
 		{
-			key: "groupChats",
+			key: "groupChats" as const,
 			label: "Групові чати",
 			icon: <IMAGES.chatButton style={styles.icon} />,
 		},
-	] as const;
+	];
 
 	const renderMessage = ({ item }: { item: IMessage }) => {
 		const isMe =
@@ -404,6 +393,9 @@ export default function ChatScreen() {
 			? photoUri(sender.profile.avatar)
 			: null;
 		const isRead = (item.chat_app_message_readers?.length ?? 0) > 0;
+		const messageImages =
+			(item as IMessage & { messageImages?: MessageImage[] })
+				.messageImages ?? [];
 
 		return (
 			<View
@@ -441,46 +433,41 @@ export default function ChatScreen() {
 							isMe ? styles.bubbleMe : styles.bubbleOther,
 						]}
 					>
-						{item.messageImages?.length > 0 && (
+						{messageImages.length > 0 && (
 							<View style={styles.imageGrid}>
-								{item.messageImages
-									.slice(0, 7)
-									.map((img, index) => {
-										const count = item.messageImages.length;
-										const isLast = index === count - 1;
+								{messageImages.slice(0, 7).map((img, index) => {
+									const count = messageImages.length;
+									const isAloneInRow =
+										(count === 3 && index === 2) ||
+										(count === 5 && index === 4) ||
+										(count === 6 && index === 5) ||
+										count === 1;
 
-										// Последняя одна в строке — на всю ширину
-										const isAloneInRow =
-											(count === 3 && index === 2) ||
-											(count === 5 && index === 4) ||
-											(count === 6 && index === 5) ||
-											count === 1;
-
-										return (
-											<Image
-												key={img.id}
-												source={{
-													uri: photoUri(img.image),
-												}}
-												style={[
-													styles.imageCell,
-													count === 1 &&
-														styles.imageSingle,
-													count >= 2 &&
-														!isAloneInRow &&
-														(index < 2
-															? styles.imageHalf
-															: index < 5
-																? styles.imageThird
-																: styles.imageHalf),
-													isAloneInRow &&
-														count > 1 &&
-														styles.imageFullRow,
-												]}
-												resizeMode="cover"
-											/>
-										);
-									})}
+									return (
+										<Image
+											key={img.id}
+											source={{
+												uri: photoUri(img.image),
+											}}
+											style={[
+												styles.imageCell,
+												count === 1 &&
+													styles.imageSingle,
+												count >= 2 &&
+													!isAloneInRow &&
+													(index < 2
+														? styles.imageHalf
+														: index < 5
+															? styles.imageThird
+															: styles.imageHalf),
+												isAloneInRow &&
+													count > 1 &&
+													styles.imageFullRow,
+											]}
+											resizeMode="cover"
+										/>
+									);
+								})}
 							</View>
 						)}
 						{item.text ? (
@@ -806,7 +793,7 @@ export default function ChatScreen() {
 				users={nonParticipants}
 				onSave={(ids) => {
 					setIsAddUsersModalOpen(false);
-					addUsers(ids.map(Number), (res) => {
+					addUsers(ids.map(Number), (res: { status: string }) => {
 						if (res.status !== "ok")
 							Alert.alert(
 								"Помилка",
@@ -909,13 +896,6 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: COLOURS.Blue20,
 	},
-	imageWrapper: { gap: 6 },
-	messageImage: {
-		width: "100%",
-		aspectRatio: 4 / 3,
-		borderRadius: 10,
-		maxWidth: 220,
-	},
 	bubbleRow: {
 		flexDirection: "row",
 		alignItems: "flex-end",
@@ -1011,21 +991,9 @@ const styles = StyleSheet.create({
 		overflow: "hidden",
 		maxWidth: 240,
 	},
-	imageCell: {
-		height: 120,
-		borderRadius: 4,
-	},
-	imageSingle: {
-		width: 240,
-		height: 220,
-	},
-	imageHalf: {
-		width: 119,
-	},
-	imageThird: {
-		width: 78,
-	},
-	imageFullRow: {
-		width: 240,
-	},
+	imageCell: { height: 120, borderRadius: 4 },
+	imageSingle: { width: 240, height: 220 },
+	imageHalf: { width: 119 },
+	imageThird: { width: 78 },
+	imageFullRow: { width: 240 },
 });
