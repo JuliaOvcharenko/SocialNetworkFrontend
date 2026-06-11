@@ -7,6 +7,7 @@ import { BASE_URL } from "@shared/config/api.config";
 import { PostOptionsModal } from "./postOptional/PostOptionsModal";
 import { getCurrentUserId } from "@shared/api/getCurrentUserId";
 import { CreatePostModal } from "../../create-post-modal";
+import { COLOURS } from "@shared/constants/colours";
 
 interface PostHeaderProps {
 	author: IUser;
@@ -55,9 +56,12 @@ export function PostHeader({ author, postId, initialData }: PostHeaderProps) {
 								]}
 							/>
 						)}
-						{author.isOnline && (
-							<View style={styles.onlineIndicator} />
-						)}
+						<View
+							style={[
+								styles.onlineIndicator,
+								{ backgroundColor: author.isOnline ? COLOURS.Green100 : COLOURS.Blue20 }
+							]}
+						/>
 					</View>
 					<Text style={styles.nickname}>{author.username}</Text>
 				</View>

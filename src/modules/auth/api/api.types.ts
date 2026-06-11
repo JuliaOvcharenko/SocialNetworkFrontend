@@ -55,12 +55,9 @@ export interface UpdateProfilePayload {
     firstName?: string | null;
     lastName?: string | null;
     signature?: string | null;
-    profile?: {
-        pseudonym?: string | null;
-        birthDate?: string | null;
-        signature?: string | null;
-        avatar?: string | null;
-    };
+    pseudonym?: string | null;
+    birthDate?: string | null;
+    avatar?: string | null;
 }
 
 export type MeResponse = User;

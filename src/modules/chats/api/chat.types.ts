@@ -10,6 +10,7 @@ export interface IChatUser {
 	lastName: string | null;
 	username: string | null;
 	profile: IChatProfile | null;
+	isOnline: boolean;
 }
 
 export interface UpdateChatDto {

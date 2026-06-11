@@ -8,7 +8,15 @@ import { ApiProvider } from "@reduxjs/toolkit/query/react";
 import { baseApi } from "@shared/api/baseApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { useSocketEvents } from "@modules/chats/hooks/useSocketEvents";
+
 SplashScreen.preventAutoHideAsync();
+
+
+function GlobalSocketListener() {
+    useSocketEvents();
+    return null;
+}
 
 export default function RootLayout() {
     const [loaded] = useFonts({
@@ -39,6 +47,8 @@ export default function RootLayout() {
 
     return (
         <ApiProvider api={baseApi}>
+            <GlobalSocketListener /> 
+            
             <SafeAreaProvider>
                 <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
                     <StatusBar style="dark" />

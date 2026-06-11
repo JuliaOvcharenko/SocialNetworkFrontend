@@ -32,14 +32,12 @@ export function FriendActionModal({
                             title="Скасувати" 
                             onPress={onCancel}
                             style={styles.outlineOverride}
-                            textStyle={styles.textOverride}
                         />
                         <Button 
                             variant="primary" 
                             title="Підтвердити" 
                             onPress={onConfirm} 
                             style={styles.primaryOverride}
-                            textStyle={styles.textOverride}
                         />
                     </View>
                 </View>

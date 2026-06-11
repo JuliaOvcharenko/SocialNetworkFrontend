@@ -48,6 +48,18 @@ export function photoUri(url: string): string {
 	return `${BASE_URL}/media/shakal/${filename}`;
 }
 
+function formatSeparatorDate(dateStr: string): string {
+	const d = new Date(dateStr);
+	if (isNaN(d.getTime())) return "";
+	const months = [
+		"січня", "лютого", "березня", "квітня", "травня", "червня",
+		"липня", "серпня", "вересня", "жовтня", "листопада", "грудня"
+	];
+	return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+
+
 function getInitials(
 	firstName?: string | null,
 	lastName?: string | null,
@@ -146,6 +158,50 @@ export default function ChatScreen() {
 	}, [isConnected, markAsRead]);
 
 	const allMessages = initialMessages as IMessage[];
+
+	const processedMessages = React.useMemo(() => {
+		if (!allMessages.length || !currentUserId) return [];
+
+		const result: any[] = [];
+		let lastDateString = "";
+		let unreadDividerInserted = false;
+
+
+		const firstUnreadIndex = allMessages.findIndex((msg) => {
+			const isMe = Number(msg.senderId) === currentUserId;
+			if (isMe) return false;
+			const isRead = msg.chat_app_message_readers?.some(
+				(r) => Number(r.userId) === currentUserId
+			);
+			return !isRead;
+		});
+
+		allMessages.forEach((msg, index) => {
+			const msgDate = new Date(msg.createdAt);
+			const currentDateString = msgDate.toDateString();
+
+			if (currentDateString !== lastDateString) {
+				result.push({
+					type: "date_separator",
+					id: `date-${currentDateString}`,
+					date: msg.createdAt,
+				});
+				lastDateString = currentDateString;
+			}
+
+			if (!unreadDividerInserted && index === firstUnreadIndex) {
+				result.push({
+					type: "unread_divider",
+					id: "unread_divider",
+				});
+				unreadDividerInserted = true;
+			}
+
+			result.push({ ...msg, type: "message" });
+		});
+
+		return result;
+	}, [allMessages, currentUserId]);
 
 	useEffect(() => {
 		getCurrentUserId().then((uid) => setCurrentUserId(Number(uid)));
@@ -324,7 +380,7 @@ export default function ChatScreen() {
 				initials: getAutoAvatar(name),
 				avatarUrl:
 					chatDetails.avatar &&
-					chatDetails.avatar !== "default-group-avatar.png"
+						chatDetails.avatar !== "default-group-avatar.png"
 						? photoUri(chatDetails.avatar)
 						: null,
 			};
@@ -335,19 +391,19 @@ export default function ChatScreen() {
 			)?.user ?? chatDetails?.users?.[0]?.user;
 		const name = otherUser
 			? getDisplayName(
-					otherUser.firstName,
-					otherUser.lastName,
-					otherUser.username,
-				)
+				otherUser.firstName,
+				otherUser.lastName,
+				otherUser.username,
+			)
 			: `Чат #${id}`;
 		return {
 			name,
 			initials: otherUser
 				? getInitials(
-						otherUser.firstName,
-						otherUser.lastName,
-						otherUser.username,
-					)
+					otherUser.firstName,
+					otherUser.lastName,
+					otherUser.username,
+				)
 				: "??",
 			avatarUrl: otherUser?.profile?.avatar
 				? photoUri(otherUser.profile.avatar)
@@ -373,7 +429,29 @@ export default function ChatScreen() {
 		},
 	];
 
-	const renderMessage = ({ item }: { item: IMessage }) => {
+	const renderItem = ({ item }: { item: any }) => {
+		if (item.type === "date_separator") {
+			return (
+				<View style={styles.dateSeparatorContainer}>
+					<View style={styles.dateSeparatorPill}>
+						<Text style={styles.dateSeparatorText}>
+							{formatSeparatorDate(item.date)}
+						</Text>
+					</View>
+				</View>
+			);
+		}
+
+		if (item.type === "unread_divider") {
+			return (
+				<View style={styles.newMessagesDividerContainer}>
+					<View style={styles.newMessagesLine} />
+					<Text style={styles.newMessagesText}>Нові повідомлення</Text>
+					<View style={styles.newMessagesLine} />
+				</View>
+			);
+		}
+
 		const isMe =
 			currentUserId !== null &&
 			item.senderId !== null &&
@@ -418,51 +496,35 @@ export default function ChatScreen() {
 								{ backgroundColor: getAvatarColor(senderName) },
 							]}
 						>
-							<Text style={styles.avatarSmallText}>
-								{initials}
-							</Text>
+							<Text style={styles.avatarSmallText}>{initials}</Text>
 						</View>
 					))}
+
 				<View style={styles.col}>
-					{!isMe && (
-						<Text style={styles.senderName}>{senderName}</Text>
-					)}
 					<View
 						style={[
 							styles.bubble,
 							isMe ? styles.bubbleMe : styles.bubbleOther,
 						]}
 					>
+						{!isMe && (
+							<Text style={styles.senderNameInside}>{senderName}</Text>
+						)}
+
 						{messageImages.length > 0 && (
 							<View style={styles.imageGrid}>
 								{messageImages.slice(0, 7).map((img, index) => {
 									const count = messageImages.length;
-									const isAloneInRow =
-										(count === 3 && index === 2) ||
-										(count === 5 && index === 4) ||
-										(count === 6 && index === 5) ||
-										count === 1;
-
+									const isAloneInRow = (count === 3 && index === 2) || (count === 5 && index === 4) || (count === 6 && index === 5) || count === 1;
 									return (
 										<Image
 											key={img.id}
-											source={{
-												uri: photoUri(img.image),
-											}}
+											source={{ uri: photoUri(img.image) }}
 											style={[
 												styles.imageCell,
-												count === 1 &&
-													styles.imageSingle,
-												count >= 2 &&
-													!isAloneInRow &&
-													(index < 2
-														? styles.imageHalf
-														: index < 5
-															? styles.imageThird
-															: styles.imageHalf),
-												isAloneInRow &&
-													count > 1 &&
-													styles.imageFullRow,
+												count === 1 && styles.imageSingle,
+												count >= 2 && !isAloneInRow && (index < 2 ? styles.imageHalf : index < 5 ? styles.imageThird : styles.imageHalf),
+												isAloneInRow && count > 1 && styles.imageFullRow,
 											]}
 											resizeMode="cover"
 										/>
@@ -470,8 +532,9 @@ export default function ChatScreen() {
 								})}
 							</View>
 						)}
+
 						{item.text ? (
-							<View style={styles.bubbleRow}>
+							<View style={[styles.bubbleContentRow, isMe ? styles.bubbleContentRowMe : styles.bubbleContentRowOther]}>
 								<Text
 									style={[
 										styles.bubbleText,
@@ -480,7 +543,7 @@ export default function ChatScreen() {
 								>
 									{item.text}
 								</Text>
-								<View style={styles.bubbleMeta}>
+								<View style={styles.bubbleMetaInline}>
 									<Text
 										style={[
 											styles.bubbleTime,
@@ -491,24 +554,16 @@ export default function ChatScreen() {
 									</Text>
 									{isMe && (
 										<Ionicons
-											name={
-												isRead
-													? "checkmark-done"
-													: "checkmark"
-											}
+											name={isRead ? "checkmark-done" : "checkmark"}
 											size={14}
-											color={
-												isRead
-													? COLOURS.Plum
-													: COLOURS.Blue50
-											}
-											style={{ marginLeft: 2 }}
+											color={isRead ? COLOURS.darkBlue : "#8A90A8"}
+											style={{ marginLeft: 4 }}
 										/>
 									)}
 								</View>
 							</View>
 						) : (
-							<View style={styles.bubbleMeta}>
+							<View style={styles.bubbleMetaInline}>
 								<Text
 									style={[
 										styles.bubbleTime,
@@ -519,18 +574,10 @@ export default function ChatScreen() {
 								</Text>
 								{isMe && (
 									<Ionicons
-										name={
-											isRead
-												? "checkmark-done"
-												: "checkmark"
-										}
+										name={isRead ? "checkmark-done" : "checkmark"}
 										size={14}
-										color={
-											isRead
-												? COLOURS.Plum
-												: COLOURS.Blue50
-										}
-										style={{ marginLeft: 2 }}
+										color={isRead ? COLOURS.darkBlue : "#8A90A8"}
+										style={{ marginLeft: 4 }}
 									/>
 								)}
 							</View>
@@ -550,7 +597,7 @@ export default function ChatScreen() {
 			<Header
 				showCreateButton
 				showLogoutButton
-				onCreatePress={() => {}}
+				onCreatePress={() => { }}
 			/>
 
 			<View style={styles.tabsContainer}>
@@ -628,9 +675,9 @@ export default function ChatScreen() {
 			) : (
 				<FlatList
 					ref={flatListRef}
-					data={allMessages}
+					data={processedMessages}
 					keyExtractor={(item) => String(item.id)}
-					renderItem={renderMessage}
+					renderItem={renderItem}
 					contentContainerStyle={styles.messagesList}
 					onContentSizeChange={() =>
 						flatListRef.current?.scrollToEnd({ animated: false })
@@ -864,53 +911,27 @@ const styles = StyleSheet.create({
 	headerSub: { fontSize: 12, color: COLOURS.Blue50, marginTop: 1 },
 	moreBtn: { padding: 4 },
 	messagesList: { padding: 16, gap: 12 },
+
 	messageWrapper: {
 		flexDirection: "row",
-		marginBottom: 10,
-		alignItems: "flex-end",
+		marginBottom: 12,
+		alignItems: "center", 
 		gap: 8,
 	},
 	messageWrapperMe: { justifyContent: "flex-end" },
 	messageWrapperOther: { justifyContent: "flex-start" },
-	avatarSmall: { width: 40, height: 40, borderRadius: 20, marginBottom: 2 },
+
+	avatarSmall: { width: 46, height: 46, borderRadius: 23 },
 	avatarFallback: { alignItems: "center", justifyContent: "center" },
-	avatarSmallText: { fontSize: 14, fontWeight: "600", color: COLOURS.white },
-	col: { maxWidth: "75%" },
-	senderName: {
-		fontSize: 11,
-		color: COLOURS.Blue50,
-		marginBottom: 3,
-		marginLeft: 4,
-		fontWeight: "500",
-	},
-	bubble: {
-		borderRadius: 16,
-		paddingHorizontal: 12,
-		paddingVertical: 8,
-		gap: 4,
-	},
-	bubbleMe: { backgroundColor: COLOURS.Blue20, borderBottomRightRadius: 4 },
-	bubbleOther: {
-		backgroundColor: COLOURS.white,
-		borderBottomLeftRadius: 4,
-		borderWidth: 1,
-		borderColor: COLOURS.Blue20,
-	},
-	bubbleRow: {
-		flexDirection: "row",
-		alignItems: "flex-end",
-		flexWrap: "wrap",
-		gap: 6,
-	},
-	bubbleText: { fontSize: 14, color: COLOURS.darkBlue, flexShrink: 1 },
-	bubbleTextMe: { color: COLOURS.darkBlue },
-	bubbleMeta: {
-		flexDirection: "row",
-		alignItems: "center",
-		alignSelf: "flex-end",
-	},
-	bubbleTime: { fontSize: 10, color: COLOURS.Blue50 },
-	bubbleTimeMe: { color: COLOURS.Blue50 },
+	avatarSmallText: { fontSize: 13, fontWeight: "600", color: COLOURS.white },
+
+	col: { 
+        maxWidth: "75%", 
+        flexShrink: 1, 
+    },
+
+
+
 	inputBar: {
 		flexDirection: "row",
 		alignItems: "center",
@@ -990,10 +1011,110 @@ const styles = StyleSheet.create({
 		borderRadius: 10,
 		overflow: "hidden",
 		maxWidth: 240,
+		marginBottom: 4, 
 	},
 	imageCell: { height: 120, borderRadius: 4 },
 	imageSingle: { width: 240, height: 220 },
 	imageHalf: { width: 119 },
 	imageThird: { width: 78 },
 	imageFullRow: { width: 240 },
+
+
+
+	senderNameInside: {
+		fontSize: 10,
+		fontWeight: "400",
+		fontFamily: "Wals-Regular",
+		color: COLOURS.Plum,
+		marginBottom: 8,
+	},
+
+	bubble: {
+		padding: 10,
+	},
+	bubbleMe: {
+		backgroundColor: COLOURS.Blue20,
+		borderRadius: 8,
+
+	},
+	bubbleOther: {
+		backgroundColor: COLOURS.white,
+		borderWidth: 1,
+		borderColor: COLOURS.Plum50,
+		borderRadius: 8,
+
+	},
+
+	bubbleContentRow: {
+		flexDirection: "row",
+		alignItems: "flex-end",
+		marginTop: 2,
+		flexShrink: 1,
+		flexWrap: "wrap",
+	},
+
+	bubbleContentRowMe: {
+		justifyContent: "flex-start",
+	},
+
+	bubbleContentRowOther: {
+		minWidth: 100,
+
+		justifyContent: "space-between",
+		width: "100%",
+	},
+	bubbleText: {
+		fontSize: 14,
+		fontWeight: "400", 
+		fontFamily: "Wals-Regular",
+		color: COLOURS.darkBlue,
+		lineHeight: 20,
+		flexShrink: 1,
+		marginRight: 16,
+	},
+	bubbleTextMe: { color: COLOURS.darkBlue },
+
+	bubbleMetaInline: {
+        flexDirection: "row",
+        alignItems: "center",
+        position: "relative", 
+        top: 3,               
+    },
+	bubbleTime: { fontSize: 11, color: COLOURS.Blue50 },
+	bubbleTimeMe: { color: COLOURS.Blue50 },
+
+
+	dateSeparatorContainer: {
+		alignItems: "center",
+		marginVertical: 12,
+	},
+	dateSeparatorPill: {
+		backgroundColor: COLOURS.Plum50,
+		paddingHorizontal: 10,
+		paddingVertical: 6,
+		borderRadius: 8,
+	},
+	dateSeparatorText: {
+		fontSize: 16,
+		fontWeight: "400",
+		fontFamily: "Wals-Regular", 
+		color: COLOURS.Blue50,
+	},
+	newMessagesDividerContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		marginVertical: 4,
+	},
+	newMessagesLine: {
+		flex: 1,
+		height: 1,
+		backgroundColor: COLOURS.Blue20,
+	},
+	newMessagesText: {
+		marginHorizontal: 10,
+		fontSize: 16,
+		fontWeight: "400",
+		fontFamily: "Wals-Regular", 
+		color: COLOURS.Blue50,
+	},
 });

@@ -150,9 +150,7 @@ export default function SettingsScreen() {
 			try {
 				await updateProfile({
 					username: cleanNickname,
-					profile: {
-						pseudonym: values.authorAlias,
-					},
+					pseudonym: values.authorAlias,
 				}).unwrap();
 				setIsEditingProfile(false);
 			} catch (e) {
@@ -179,9 +177,7 @@ export default function SettingsScreen() {
 				await updateProfile({
 					firstName: values.name,
 					lastName: values.surname,
-					profile: {
-						birthDate: values.birthDate,
-					},
+					birthDate: values.birthDate,
 				}).unwrap();
 				setIsEditingPersonal(false);
 			} catch (e) {
