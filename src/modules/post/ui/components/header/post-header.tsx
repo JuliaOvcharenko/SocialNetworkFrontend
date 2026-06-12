@@ -4,9 +4,11 @@ import { styles } from "./post-header.styles";
 import { IPost, IUser } from "../../../types/post.types";
 import { IMAGES } from "@shared/ui/images";
 import { BASE_URL } from "@shared/config/api.config";
-import { PostOptionsModal } from "./postOptional/PostOptionsModal";
 import { getCurrentUserId } from "@shared/api/getCurrentUserId";
 import { CreatePostModal } from "../../create-post-modal";
+import { Ionicons } from "@expo/vector-icons";
+import { useDeletePostMutation } from "@modules/post/api/post.api";
+import { ActionModal } from "@shared/ui/modals/mini-edit-modal";
 
 interface PostHeaderProps {
 	author: IUser;
@@ -18,6 +20,8 @@ export function PostHeader({ author, postId, initialData }: PostHeaderProps) {
 	const [menuVisible, setMenuVisible] = useState(false);
 	const [editModalVisible, setEditModalVisible] = useState(false);
 	const [isOwner, setIsOwner] = useState(false);
+
+	const [deletePost] = useDeletePostMutation();
 
 	useEffect(() => {
 		getCurrentUserId().then((id) => {
@@ -33,9 +37,28 @@ export function PostHeader({ author, postId, initialData }: PostHeaderProps) {
 		: null;
 
 	const handleEdit = () => {
-		setMenuVisible(false);
 		setEditModalVisible(true);
 	};
+
+	const handleDelete = async () => {
+		await deletePost(postId);
+	};
+
+	const postActions = [
+		{
+			id: "edit",
+			title: "Редактировать",
+			icon: <Ionicons name="create-outline" size={22} color="#1B1A2A" />,
+			onPress: handleEdit,
+		},
+		{
+			id: "delete",
+			title: "Удалить",
+			icon: <Ionicons name="trash-outline" size={22} color="#1B1A2A" />,
+			danger: true,
+			onPress: handleDelete,
+		},
+	];
 
 	return (
 		<View style={styles.container}>
@@ -61,6 +84,7 @@ export function PostHeader({ author, postId, initialData }: PostHeaderProps) {
 					</View>
 					<Text style={styles.nickname}>{author.username}</Text>
 				</View>
+
 				{isOwner && (
 					<TouchableOpacity
 						style={styles.moreButton}
@@ -80,11 +104,10 @@ export function PostHeader({ author, postId, initialData }: PostHeaderProps) {
 
 			<View style={styles.separator} />
 
-			<PostOptionsModal
+			<ActionModal
 				visible={menuVisible}
-				postId={postId}
 				onClose={() => setMenuVisible(false)}
-				onEdit={handleEdit}
+				actions={postActions}
 			/>
 
 			<CreatePostModal

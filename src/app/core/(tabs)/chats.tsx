@@ -255,6 +255,8 @@ function MessagesTab({ currentUserId }: { currentUserId: number | null }) {
 		});
 	}, [search, personalChats, currentUserId]);
 
+	
+
 	if (isLoading)
 		return (
 			<View style={[styles.panel, { padding: 32, alignItems: "center" }]}>
@@ -428,12 +430,34 @@ function GroupChatsTab() {
 	const router = useRouter();
 	const [search, setSearch] = useState("");
 	const { data: groupChats = [], isLoading } = useGetGroupChatsQuery();
+
 	const filtered = useMemo((): IChat[] => {
-		if (!search.trim()) return groupChats as IChat[];
 		const q = search.toLowerCase();
-		return (groupChats as IChat[]).filter((c) =>
-			c.name?.toLowerCase().includes(q),
+
+		const chats = !search.trim()
+			? (groupChats as IChat[])
+			: (groupChats as IChat[]).filter((c) =>
+					(c.name ?? "").toLowerCase().includes(q),
+				);
+		console.log(
+			"chats dates:",
+			chats.map((c) => ({
+				id: c.id,
+				lastMessage: c.lastMessage?.createdAt,
+				updatedAt: c.updatedAt,
+				createdAt: c.createdAt,
+			})),
 		);
+
+		return [...chats].sort((a, b) => {
+			const dateA = new Date(
+				a.lastMessage?.createdAt || a.updatedAt || a.createdAt || 0,
+			).getTime();
+			const dateB = new Date(
+				b.lastMessage?.createdAt || b.updatedAt || b.createdAt || 0,
+			).getTime();
+			return dateB - dateA;
+		});
 	}, [search, groupChats]);
 
 	if (isLoading)

@@ -1,13 +1,5 @@
 import React from "react";
-import {
-	Modal,
-	View,
-	Text,
-	TouchableOpacity,
-	StyleSheet,
-	Pressable,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { COLOURS } from "@shared/constants/colours";
 
 type ActionItem = {
@@ -32,16 +24,12 @@ export const ActionModal = ({ visible, onClose, actions }: Props) => {
 			animationType="fade"
 			onRequestClose={onClose}
 		>
-			<Pressable style={styles.overlay} onPress={onClose}>
-				<Pressable style={styles.modal}>
-					<TouchableOpacity style={styles.moreButton}>
-						<Ionicons
-							name="ellipsis-vertical"
-							size={22}
-							color="#8B8895"
-						/>
-					</TouchableOpacity>
-
+			<TouchableOpacity
+				style={styles.overlay}
+				onPress={onClose}
+				activeOpacity={1}
+			>
+				<View style={styles.modal}>
 					{actions.map((action, index) => (
 						<View key={action.id}>
 							<TouchableOpacity
@@ -53,7 +41,6 @@ export const ActionModal = ({ visible, onClose, actions }: Props) => {
 								}}
 							>
 								<View style={styles.icon}>{action.icon}</View>
-
 								<Text
 									style={[
 										styles.text,
@@ -69,8 +56,8 @@ export const ActionModal = ({ visible, onClose, actions }: Props) => {
 							)}
 						</View>
 					))}
-				</Pressable>
-			</Pressable>
+				</View>
+			</TouchableOpacity>
 		</Modal>
 	);
 };
@@ -78,53 +65,45 @@ export const ActionModal = ({ visible, onClose, actions }: Props) => {
 const styles = StyleSheet.create({
 	overlay: {
 		flex: 1,
-		backgroundColor: "rgba(0,0,0,0.45)",
-		justifyContent: "center",
-		paddingHorizontal: 20,
+		backgroundColor: "transparent",
+		justifyContent: "flex-start",
+		alignItems: "flex-end",
+		paddingTop: 60,
+		paddingRight: 12,
 	},
-
 	modal: {
 		backgroundColor: COLOURS.Plum50,
-		borderRadius: 18,
-		paddingTop: 18,
-		paddingBottom: 10,
-		overflow: "hidden",
+		borderRadius: 14,
+		paddingVertical: 6,
+		minWidth: 200,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.15,
+		shadowRadius: 12,
+		elevation: 8,
 	},
-
-	moreButton: {
-		position: "absolute",
-		top: 14,
-		right: 10,
-		zIndex: 10,
-		padding: 6,
-	},
-
 	action: {
 		flexDirection: "row",
 		alignItems: "center",
-		paddingHorizontal: 22,
-		paddingVertical: 20,
-		gap: 16,
+		paddingHorizontal: 16,
+		paddingVertical: 14,
+		gap: 12,
 	},
-
 	icon: {
-		width: 26,
+		width: 24,
 		alignItems: "center",
 	},
-
 	text: {
-		fontSize: 18,
-		fontWeight: "600",
+		fontSize: 16,
+		fontWeight: "500",
 		color: "#1B1A2A",
 	},
-
 	dangerText: {
-		color: "#1B1A2A",
+		color: "#E53935",
 	},
-
 	divider: {
 		height: 1,
 		backgroundColor: "#D8D2DF",
-		marginHorizontal: 20,
+		marginHorizontal: 12,
 	},
 });
