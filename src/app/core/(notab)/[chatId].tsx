@@ -6,7 +6,6 @@ import {
 	TouchableOpacity,
 	FlatList,
 	StyleSheet,
-	KeyboardAvoidingView,
 	Platform,
 	Image,
 	ActivityIndicator,
@@ -39,6 +38,7 @@ import {
 import { useGetAllFriendsQuery } from "@modules/friends/api/friend.api";
 import { IUser } from "@modules/friends/api/friend.types";
 import { MessageImage } from "@modules/chats/api/chat.types";
+import { KeyboardSafeScreen } from "@shared/ui/keyboard-safe-screen";
 
 export function photoUri(url: string): string {
 	if (!url) return "";
@@ -476,383 +476,218 @@ export default function ChatScreen() {
 				.messageImages ?? [];
 
 		return (
-			<View
-				style={[
-					styles.messageWrapper,
-					isMe ? styles.messageWrapperMe : styles.messageWrapperOther,
-				]}
-			>
-				{!isMe &&
-					(avatarUrl ? (
-						<Image
-							source={{ uri: avatarUrl }}
-							style={styles.avatarSmall}
-						/>
-					) : (
-						<View
-							style={[
-								styles.avatarSmall,
-								styles.avatarFallback,
-								{ backgroundColor: getAvatarColor(senderName) },
-							]}
-						>
-							<Text style={styles.avatarSmallText}>{initials}</Text>
-						</View>
-					))}
+            <View
+                style={[
+                    styles.messageWrapper,
+                    isMe ? styles.messageWrapperMe : styles.messageWrapperOther,
+                ]}
+            >
+                {!isMe &&
+                    (avatarUrl ? (
+                        <Image
+                            source={{ uri: avatarUrl }}
+                            style={styles.avatarSmall}
+                        />
+                    ) : (
+                        <View
+                            style={[
+                                styles.avatarSmall,
+                                styles.avatarFallback,
+                                { backgroundColor: getAvatarColor(senderName) },
+                            ]}
+                        >
+                            <Text style={styles.avatarSmallText}>{initials}</Text>
+                        </View>
+                    ))}
 
-				<View style={styles.col}>
-					<View
-						style={[
-							styles.bubble,
-							isMe ? styles.bubbleMe : styles.bubbleOther,
-						]}
-					>
-						{!isMe && (
-							<Text style={styles.senderNameInside}>{senderName}</Text>
-						)}
+                <View style={styles.col}>
+                    <View
+                        style={[
+                            styles.bubble,
+                            isMe ? styles.bubbleMe : styles.bubbleOther,
+                        ]}
+                    >
+                        {!isMe && (
+                            <Text style={styles.senderNameInside}>{senderName}</Text>
+                        )}
 
-						{messageImages.length > 0 && (
-							<View style={styles.imageGrid}>
-								{messageImages.slice(0, 7).map((img, index) => {
-									const count = messageImages.length;
-									const isAloneInRow = (count === 3 && index === 2) || (count === 5 && index === 4) || (count === 6 && index === 5) || count === 1;
-									return (
-										<Image
-											key={img.id}
-											source={{ uri: photoUri(img.image) }}
-											style={[
-												styles.imageCell,
-												count === 1 && styles.imageSingle,
-												count >= 2 && !isAloneInRow && (index < 2 ? styles.imageHalf : index < 5 ? styles.imageThird : styles.imageHalf),
-												isAloneInRow && count > 1 && styles.imageFullRow,
-											]}
-											resizeMode="cover"
-										/>
-									);
-								})}
-							</View>
-						)}
+                        {messageImages.length > 0 && (
+                            <View style={styles.imageGrid}>
+                                {messageImages.slice(0, 7).map((img, index) => {
+                                    const count = messageImages.length;
+                                    const isAloneInRow = (count === 3 && index === 2) || (count === 5 && index === 4) || (count === 6 && index === 5) || count === 1;
+                                    return (
+                                        <Image
+                                            key={img.id}
+                                            source={{ uri: photoUri(img.image) }}
+                                            style={[
+                                                styles.imageCell,
+                                                count === 1 && styles.imageSingle,
+                                                count >= 2 && !isAloneInRow && (index < 2 ? styles.imageHalf : index < 5 ? styles.imageThird : styles.imageHalf),
+                                                isAloneInRow && count > 1 && styles.imageFullRow,
+                                            ]}
+                                            resizeMode="cover"
+                                        />
+                                    );
+                                })}
+                            </View>
+                        )}
 
-						{item.text ? (
-							<View style={[styles.bubbleContentRow, isMe ? styles.bubbleContentRowMe : styles.bubbleContentRowOther]}>
-								<Text
-									style={[
-										styles.bubbleText,
-										isMe && styles.bubbleTextMe,
-									]}
-								>
-									{item.text}
-								</Text>
-								<View style={styles.bubbleMetaInline}>
-									<Text
-										style={[
-											styles.bubbleTime,
-											isMe && styles.bubbleTimeMe,
-										]}
-									>
-										{formatMessageTime(item.createdAt)}
-									</Text>
-									{isMe && (
-										<Ionicons
-											name={isRead ? "checkmark-done" : "checkmark"}
-											size={14}
-											color={isRead ? COLOURS.darkBlue : "#8A90A8"}
-											style={{ marginLeft: 4 }}
-										/>
-									)}
-								</View>
-							</View>
-						) : (
-							<View style={styles.bubbleMetaInline}>
-								<Text
-									style={[
-										styles.bubbleTime,
-										isMe && styles.bubbleTimeMe,
-									]}
-								>
-									{formatMessageTime(item.createdAt)}
-								</Text>
-								{isMe && (
-									<Ionicons
-										name={isRead ? "checkmark-done" : "checkmark"}
-										size={14}
-										color={isRead ? COLOURS.darkBlue : "#8A90A8"}
-										style={{ marginLeft: 4 }}
-									/>
-								)}
-							</View>
-						)}
-					</View>
-				</View>
-			</View>
-		);
-	};
+                        {item.text ? (
+                            <View style={[styles.bubbleContentRow, isMe ? styles.bubbleContentRowMe : styles.bubbleContentRowOther]}>
+                                <Text
+                                    style={[
+                                        styles.bubbleText,
+                                        isMe && styles.bubbleTextMe,
+                                    ]}
+                                >
+                                    {item.text}
+                                </Text>
+                                <View style={styles.bubbleMetaInline}>
+                                    <Text
+                                        style={[
+                                            styles.bubbleTime,
+                                            isMe && styles.bubbleTimeMe,
+                                        ]}
+                                    >
+                                        {formatMessageTime(item.createdAt)}
+                                    </Text>
+                                    {isMe && (
+                                        <Ionicons
+                                            name={isRead ? "checkmark-done" : "checkmark"}
+                                            size={14}
+                                            color={isRead ? COLOURS.darkBlue : "#8A90A8"}
+                                            style={{ marginLeft: 4 }}
+                                        />
+                                    )}
+                                </View>
+                            </View>
+                        ) : (
+                            <View style={styles.bubbleMetaInline}>
+                                <Text
+                                    style={[
+                                        styles.bubbleTime,
+                                        isMe && styles.bubbleTimeMe,
+                                    ]}
+                                >
+                                    {formatMessageTime(item.createdAt)}
+                                </Text>
+                                {isMe && (
+                                    <Ionicons
+                                        name={isRead ? "checkmark-done" : "checkmark"}
+                                        size={14}
+                                        color={isRead ? COLOURS.darkBlue : "#8A90A8"}
+                                        style={{ marginLeft: 4 }}
+                                    />
+                                )}
+                            </View>
+                        )}
+                    </View>
+                </View>
+            </View>
+        );
+    };
 
-	return (
-		<KeyboardAvoidingView
-			style={styles.container}
-			behavior={Platform.OS === "ios" ? "padding" : undefined}
-			keyboardVerticalOffset={90}
-		>
-			<Header
-				showCreateButton
-				showLogoutButton
-				onCreatePress={() => { }}
-			/>
+    return (
+        <KeyboardSafeScreen
+            style={styles.container}
+            footer={<Footer />} 
+        >
+            <Header
+                showCreateButton
+                showLogoutButton
+                onCreatePress={() => { }}
+            />
 
-			<View style={styles.tabsContainer}>
-				{tabs.map((tab) => (
-					<TouchableOpacity
-						key={tab.key}
-						style={styles.tab}
-						onPress={() =>
-							router.push(`/core/chats?tab=${tab.key}`)
-						}
-						activeOpacity={0.7}
-					>
-						<View style={styles.iconWrapper}>{tab.icon}</View>
-						<Text style={styles.tabTextActive}>{tab.label}</Text>
-						{activeTab === tab.key && (
-							<View style={styles.indicator} />
-						)}
-					</TouchableOpacity>
-				))}
-			</View>
+            <View style={styles.tabsContainer}>
+                {tabs.map((tab) => (
+                    <TouchableOpacity
+                        key={tab.key}
+                        style={styles.tab}
+                        onPress={() => router.push(`/core/chats?tab=${tab.key}`)}
+                        activeOpacity={0.7}
+                    >
+                        <View style={styles.iconWrapper}>{tab.icon}</View>
+                        <Text style={styles.tabTextActive}>{tab.label}</Text>
+                        {activeTab === tab.key && <View style={styles.indicator} />}
+                    </TouchableOpacity>
+                ))}
+            </View>
 
-			<View style={styles.chatHeader}>
-				<TouchableOpacity
-					onPress={() =>
-						router.push(
-							`/core/chats?tab=${fromTab ?? "groupChats"}`,
-						)
-					}
-					style={styles.backBtn}
-				>
-					<Ionicons
-						name="chevron-back"
-						size={24}
-						color={COLOURS.Blue50}
-					/>
-				</TouchableOpacity>
-				{chatHeaderInfo.avatarUrl ? (
-					<Image
-						source={{ uri: chatHeaderInfo.avatarUrl }}
-						style={styles.headerAvatarImage}
-					/>
-				) : (
-					<View style={styles.headerAvatar}>
-						<Text style={styles.headerAvatarText}>
-							{chatHeaderInfo.initials}
-						</Text>
-					</View>
-				)}
-				<View style={styles.headerInfo}>
-					<Text style={styles.headerName}>{chatHeaderInfo.name}</Text>
-					<Text style={styles.headerSub}>
-						{isGroup
-							? `${(chatDetails?.users?.length ?? 0) + 1} учасників`
-							: isConnected
-								? "онлайн"
-								: "з'єднання..."}
-					</Text>
-				</View>
-				<TouchableOpacity
-					style={styles.moreBtn}
-					onPress={() => setIsActionModalOpen(true)}
-				>
-					<Ionicons
-						name="ellipsis-vertical"
-						size={20}
-						color={COLOURS.Blue50}
-					/>
-				</TouchableOpacity>
-			</View>
+            <View style={styles.chatHeader}>
+                <TouchableOpacity
+                    onPress={() => router.push(`/core/chats?tab=${fromTab ?? "groupChats"}`)}
+                    style={styles.backBtn}
+                >
+                    <Ionicons name="chevron-back" size={24} color={COLOURS.Blue50} />
+                </TouchableOpacity>
+                {chatHeaderInfo.avatarUrl ? (
+                    <Image source={{ uri: chatHeaderInfo.avatarUrl }} style={styles.headerAvatarImage} />
+                ) : (
+                    <View style={styles.headerAvatar}>
+                        <Text style={styles.headerAvatarText}>{chatHeaderInfo.initials}</Text>
+                    </View>
+                )}
+                <View style={styles.headerInfo}>
+                    <Text style={styles.headerName}>{chatHeaderInfo.name}</Text>
+                    <Text style={styles.headerSub}>
+                        {isGroup
+                            ? `${(chatDetails?.users?.length ?? 0) + 1} участников`
+                            : isConnected ? "онлайн" : "соединение..."}
+                    </Text>
+                </View>
+                <TouchableOpacity style={styles.moreBtn} onPress={() => setIsActionModalOpen(true)}>
+                    <Ionicons name="ellipsis-vertical" size={20} color={COLOURS.Blue50} />
+                </TouchableOpacity>
+            </View>
 
-			{isLoading || isChatLoading ? (
-				<View style={styles.loader}>
-					<ActivityIndicator size="large" color={COLOURS.Plum} />
-				</View>
-			) : (
-				<FlatList
-					ref={flatListRef}
-					data={processedMessages}
-					keyExtractor={(item) => String(item.id)}
-					renderItem={renderItem}
-					contentContainerStyle={styles.messagesList}
-					onContentSizeChange={() =>
-						flatListRef.current?.scrollToEnd({ animated: false })
-					}
-				/>
-			)}
+            {isLoading || isChatLoading ? (
+                <View style={styles.loader}>
+                    <ActivityIndicator size="large" color={COLOURS.Plum} />
+                </View>
+            ) : (
+                <FlatList
+                    ref={flatListRef}
+                    style={{ flex: 1 }} 
+                    data={processedMessages}
+                    keyExtractor={(item) => String(item.id)}
+                    renderItem={renderItem}
+                    contentContainerStyle={styles.messagesList}
+                    keyboardShouldPersistTaps="handled"
+                    onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+                />
+            )}
 
-			<View style={styles.inputBar}>
-				<TextInput
-					style={styles.input}
-					value={message}
-					onChangeText={setMessage}
-					placeholder="Повідомлення"
-					placeholderTextColor={COLOURS.Blue50}
-					onSubmitEditing={handleSend}
-					returnKeyType="send"
-				/>
-				<TouchableOpacity
-					style={styles.attachBtn}
-					onPress={handlePickImage}
-				>
-					<IMAGES.GalleryButton />
-				</TouchableOpacity>
-				<TouchableOpacity style={styles.sendBtn} onPress={handleSend}>
-					<IMAGES.HandButton />
-				</TouchableOpacity>
-			</View>
+            <View style={styles.inputBar}>
+                <TextInput
+                    style={styles.input}
+                    value={message}
+                    onChangeText={setMessage}
+                    placeholder="Повідомлення"
+                    placeholderTextColor={COLOURS.Blue50}
+                    onSubmitEditing={handleSend}
+                    returnKeyType="send"
+                />
+                <TouchableOpacity style={styles.attachBtn} onPress={handlePickImage}>
+                    <IMAGES.GalleryButton />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.sendBtn} onPress={handleSend}>
+                    <IMAGES.HandButton />
+                </TouchableOpacity>
+            </View>
 
-			<Footer />
 
-			{isActionModalOpen && (
-				<>
-					<TouchableOpacity
-						activeOpacity={1}
-						style={styles.modalOverlay}
-						onPress={() => setIsActionModalOpen(false)}
-					/>
-					<View style={styles.dropdownModal}>
-						<View style={styles.dropdownDots}>
-							<TouchableOpacity
-								style={styles.moreBtn}
-								onPress={() => setIsActionModalOpen(false)}
-							>
-								<Ionicons
-									name="ellipsis-vertical"
-									size={20}
-									color={COLOURS.Blue50}
-								/>
-							</TouchableOpacity>
-						</View>
-
-						<TouchableOpacity
-							style={styles.dropdownItem}
-							activeOpacity={0.7}
-						>
-							<IMAGES.GalleryButton
-								style={{ width: 17, height: 17 }}
-							/>
-							<Text style={styles.dropdownText}>Медіа</Text>
-						</TouchableOpacity>
-
-						{isGroup && isAdmin && (
-							<TouchableOpacity
-								style={styles.dropdownItem}
-								activeOpacity={0.7}
-								onPress={() => {
-									setIsActionModalOpen(false);
-									setIsEditModalOpen(true);
-								}}
-							>
-								<IMAGES.PenButton
-									style={{ width: 16, height: 16 }}
-								/>
-								<Text style={styles.dropdownText}>
-									Редагувати групу
-								</Text>
-							</TouchableOpacity>
-						)}
-
-						<View style={styles.dropdownDivider} />
-
-						{isGroup && !isAdmin && (
-							<TouchableOpacity
-								style={styles.dropdownItem}
-								activeOpacity={0.7}
-								onPress={() => {
-									setIsActionModalOpen(false);
-									handleLeaveChat();
-								}}
-							>
-								<Ionicons
-									name="log-out-outline"
-									size={19}
-									color={COLOURS.darkBlue}
-								/>
-								<Text style={styles.dropdownText}>
-									Покинути групу
-								</Text>
-							</TouchableOpacity>
-						)}
-
-						{isAdmin && (
-							<TouchableOpacity
-								style={styles.dropdownItem}
-								activeOpacity={0.7}
-								onPress={() => {
-									setIsActionModalOpen(false);
-									handleDeleteChat();
-								}}
-							>
-								<Ionicons
-									name="trash-outline"
-									size={17}
-									color="#e76f51"
-								/>
-								<Text
-									style={[
-										styles.dropdownText,
-										{ color: "#e76f51" },
-									]}
-								>
-									Видалити чат
-								</Text>
-							</TouchableOpacity>
-						)}
-					</View>
-				</>
-			)}
-
-			<GroupDetailsModal
-				visible={isEditModalOpen}
-				onClose={() => {
-					setIsEditModalOpen(false);
-					setGroupPhotoUri(null);
-				}}
-				selectedUsers={
-					(chatDetails?.users?.map((u) => ({
-						...u.user,
-						id: String(u.userId),
-						email: "",
-					})) as IUser[]) ?? []
-				}
-				onRemoveUser={(userId) => handleRemoveUser(Number(userId))}
-				onAddMore={() => setIsAddUsersModalOpen(true)}
-				onSubmit={handleEditGroup}
-				title="Редагування групи"
-				buttonText="Зберегти зміни"
-				initialName={chatDetails?.name ?? ""}
-				groupPhotoUri={
-					groupPhotoUri ??
-					(chatDetails?.avatar ? photoUri(chatDetails.avatar) : null)
-				}
-				onAddPhoto={handlePickGroupPhoto}
-				onReplacePhoto={handlePickGroupPhoto}
-			/>
-
-			<SelectUsersModal
-				visible={isAddUsersModalOpen}
-				onClose={() => setIsAddUsersModalOpen(false)}
-				users={nonParticipants}
-				onSave={(ids) => {
-					setIsAddUsersModalOpen(false);
-					addUsers(ids.map(Number), (res: { status: string }) => {
-						if (res.status !== "ok")
-							Alert.alert(
-								"Помилка",
-								"Не вдалося додати учасників",
-							);
-					});
-				}}
-				title="Додати учасників"
-				buttonText="Додати"
-			/>
-		</KeyboardAvoidingView>
-	);
+            {isActionModalOpen && (
+                <>
+                    <TouchableOpacity
+                        activeOpacity={1}
+                        style={styles.modalOverlay}
+                        onPress={() => setIsActionModalOpen(false)}
+                    />
+                </>
+            )}
+        </KeyboardSafeScreen>
+    );
 }
 
 const styles = StyleSheet.create({

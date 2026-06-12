@@ -28,6 +28,7 @@
     },
     "android": {
       "package": "com.socialmedia.socialmedia",
+      "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
