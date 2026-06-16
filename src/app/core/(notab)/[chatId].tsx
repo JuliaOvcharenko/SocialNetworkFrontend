@@ -42,6 +42,10 @@ import { MessageImage } from "@modules/chats/api/chat.types";
 
 export function photoUri(url: string): string {
 	if (!url) return "";
+	if (url.includes("res.cloudinary.com")) {
+		console.log("Cloudinary URL passed through:", url);
+		return url;
+	}
 	if (url.startsWith("http"))
 		return url.replace(/^https?:\/\/[^/]+/, BASE_URL);
 	const filename = url.split("/").pop();
@@ -52,13 +56,21 @@ function formatSeparatorDate(dateStr: string): string {
 	const d = new Date(dateStr);
 	if (isNaN(d.getTime())) return "";
 	const months = [
-		"січня", "лютого", "березня", "квітня", "травня", "червня",
-		"липня", "серпня", "вересня", "жовтня", "листопада", "грудня"
+		"січня",
+		"лютого",
+		"березня",
+		"квітня",
+		"травня",
+		"червня",
+		"липня",
+		"серпня",
+		"вересня",
+		"жовтня",
+		"листопада",
+		"грудня",
 	];
 	return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
-
-
 
 function getInitials(
 	firstName?: string | null,
@@ -157,6 +169,8 @@ export default function ChatScreen() {
 		markAsRead();
 	}, [isConnected, markAsRead]);
 
+	console.log("RAW MESSAGES:", JSON.stringify(initialMessages[0], null, 2));
+
 	const allMessages = initialMessages as IMessage[];
 
 	const processedMessages = React.useMemo(() => {
@@ -166,12 +180,11 @@ export default function ChatScreen() {
 		let lastDateString = "";
 		let unreadDividerInserted = false;
 
-
 		const firstUnreadIndex = allMessages.findIndex((msg) => {
 			const isMe = Number(msg.senderId) === currentUserId;
 			if (isMe) return false;
 			const isRead = msg.chat_app_message_readers?.some(
-				(r) => Number(r.userId) === currentUserId
+				(r) => Number(r.userId) === currentUserId,
 			);
 			return !isRead;
 		});
@@ -380,7 +393,7 @@ export default function ChatScreen() {
 				initials: getAutoAvatar(name),
 				avatarUrl:
 					chatDetails.avatar &&
-						chatDetails.avatar !== "default-group-avatar.png"
+					chatDetails.avatar !== "default-group-avatar.png"
 						? photoUri(chatDetails.avatar)
 						: null,
 			};
@@ -391,19 +404,19 @@ export default function ChatScreen() {
 			)?.user ?? chatDetails?.users?.[0]?.user;
 		const name = otherUser
 			? getDisplayName(
-				otherUser.firstName,
-				otherUser.lastName,
-				otherUser.username,
-			)
+					otherUser.firstName,
+					otherUser.lastName,
+					otherUser.username,
+				)
 			: `Чат #${id}`;
 		return {
 			name,
 			initials: otherUser
 				? getInitials(
-					otherUser.firstName,
-					otherUser.lastName,
-					otherUser.username,
-				)
+						otherUser.firstName,
+						otherUser.lastName,
+						otherUser.username,
+					)
 				: "??",
 			avatarUrl: otherUser?.profile?.avatar
 				? photoUri(otherUser.profile.avatar)
@@ -431,6 +444,7 @@ export default function ChatScreen() {
 
 	const renderItem = ({ item }: { item: any }) => {
 		if (item.type === "date_separator") {
+			console.log("RENDER ITEM:", item.id, "images:", JSON.stringify(item.messageImages));
 			return (
 				<View style={styles.dateSeparatorContainer}>
 					<View style={styles.dateSeparatorPill}>
@@ -446,7 +460,9 @@ export default function ChatScreen() {
 			return (
 				<View style={styles.newMessagesDividerContainer}>
 					<View style={styles.newMessagesLine} />
-					<Text style={styles.newMessagesText}>Нові повідомлення</Text>
+					<Text style={styles.newMessagesText}>
+						Нові повідомлення
+					</Text>
 					<View style={styles.newMessagesLine} />
 				</View>
 			);
@@ -496,7 +512,9 @@ export default function ChatScreen() {
 								{ backgroundColor: getAvatarColor(senderName) },
 							]}
 						>
-							<Text style={styles.avatarSmallText}>{initials}</Text>
+							<Text style={styles.avatarSmallText}>
+								{initials}
+							</Text>
 						</View>
 					))}
 
@@ -508,25 +526,57 @@ export default function ChatScreen() {
 						]}
 					>
 						{!isMe && (
-							<Text style={styles.senderNameInside}>{senderName}</Text>
+							<Text style={styles.senderNameInside}>
+								{senderName}
+							</Text>
 						)}
 
 						{messageImages.length > 0 && (
 							<View style={styles.imageGrid}>
 								{messageImages.slice(0, 7).map((img, index) => {
 									const count = messageImages.length;
-									const isAloneInRow = (count === 3 && index === 2) || (count === 5 && index === 4) || (count === 6 && index === 5) || count === 1;
+									const isAloneInRow =
+										(count === 3 && index === 2) ||
+										(count === 5 && index === 4) ||
+										(count === 6 && index === 5) ||
+										count === 1;
 									return (
 										<Image
 											key={img.id}
-											source={{ uri: photoUri(img.image) }}
+											source={{
+												uri: photoUri(img.image),
+											}}
 											style={[
 												styles.imageCell,
-												count === 1 && styles.imageSingle,
-												count >= 2 && !isAloneInRow && (index < 2 ? styles.imageHalf : index < 5 ? styles.imageThird : styles.imageHalf),
-												isAloneInRow && count > 1 && styles.imageFullRow,
+												count === 1 &&
+													styles.imageSingle,
+												count >= 2 &&
+													!isAloneInRow &&
+													(index < 2
+														? styles.imageHalf
+														: index < 5
+															? styles.imageThird
+															: styles.imageHalf),
+												isAloneInRow &&
+													count > 1 &&
+													styles.imageFullRow,
 											]}
 											resizeMode="cover"
+											onError={(e) =>
+												console.log(
+													"IMAGE LOAD ERROR:",
+													img.image,
+													JSON.stringify(
+														e.nativeEvent,
+													),
+												)
+											}
+											onLoad={() =>
+												console.log(
+													"IMAGE LOADED OK:",
+													img.image,
+												)
+											}
 										/>
 									);
 								})}
@@ -534,7 +584,14 @@ export default function ChatScreen() {
 						)}
 
 						{item.text ? (
-							<View style={[styles.bubbleContentRow, isMe ? styles.bubbleContentRowMe : styles.bubbleContentRowOther]}>
+							<View
+								style={[
+									styles.bubbleContentRow,
+									isMe
+										? styles.bubbleContentRowMe
+										: styles.bubbleContentRowOther,
+								]}
+							>
 								<Text
 									style={[
 										styles.bubbleText,
@@ -554,9 +611,17 @@ export default function ChatScreen() {
 									</Text>
 									{isMe && (
 										<Ionicons
-											name={isRead ? "checkmark-done" : "checkmark"}
+											name={
+												isRead
+													? "checkmark-done"
+													: "checkmark"
+											}
 											size={14}
-											color={isRead ? COLOURS.darkBlue : "#8A90A8"}
+											color={
+												isRead
+													? COLOURS.darkBlue
+													: "#8A90A8"
+											}
 											style={{ marginLeft: 4 }}
 										/>
 									)}
@@ -574,9 +639,17 @@ export default function ChatScreen() {
 								</Text>
 								{isMe && (
 									<Ionicons
-										name={isRead ? "checkmark-done" : "checkmark"}
+										name={
+											isRead
+												? "checkmark-done"
+												: "checkmark"
+										}
 										size={14}
-										color={isRead ? COLOURS.darkBlue : "#8A90A8"}
+										color={
+											isRead
+												? COLOURS.darkBlue
+												: "#8A90A8"
+										}
 										style={{ marginLeft: 4 }}
 									/>
 								)}
@@ -597,7 +670,7 @@ export default function ChatScreen() {
 			<Header
 				showCreateButton
 				showLogoutButton
-				onCreatePress={() => { }}
+				onCreatePress={() => {}}
 			/>
 
 			<View style={styles.tabsContainer}>
@@ -679,6 +752,10 @@ export default function ChatScreen() {
 					keyExtractor={(item) => String(item.id)}
 					renderItem={renderItem}
 					contentContainerStyle={styles.messagesList}
+					initialNumToRender={20}
+					maxToRenderPerBatch={10}
+					windowSize={5}
+					removeClippedSubviews={true}
 					onContentSizeChange={() =>
 						flatListRef.current?.scrollToEnd({ animated: false })
 					}
@@ -915,7 +992,7 @@ const styles = StyleSheet.create({
 	messageWrapper: {
 		flexDirection: "row",
 		marginBottom: 12,
-		alignItems: "center", 
+		alignItems: "center",
 		gap: 8,
 	},
 	messageWrapperMe: { justifyContent: "flex-end" },
@@ -925,12 +1002,10 @@ const styles = StyleSheet.create({
 	avatarFallback: { alignItems: "center", justifyContent: "center" },
 	avatarSmallText: { fontSize: 13, fontWeight: "600", color: COLOURS.white },
 
-	col: { 
-        maxWidth: "75%", 
-        flexShrink: 1, 
-    },
-
-
+	col: {
+		maxWidth: "75%",
+		flexShrink: 1,
+	},
 
 	inputBar: {
 		flexDirection: "row",
@@ -1011,15 +1086,13 @@ const styles = StyleSheet.create({
 		borderRadius: 10,
 		overflow: "hidden",
 		maxWidth: 240,
-		marginBottom: 4, 
+		marginBottom: 4,
 	},
 	imageCell: { height: 120, borderRadius: 4 },
 	imageSingle: { width: 240, height: 220 },
 	imageHalf: { width: 119 },
 	imageThird: { width: 78 },
 	imageFullRow: { width: 240 },
-
-
 
 	senderNameInside: {
 		fontSize: 10,
@@ -1035,14 +1108,12 @@ const styles = StyleSheet.create({
 	bubbleMe: {
 		backgroundColor: COLOURS.Blue20,
 		borderRadius: 8,
-
 	},
 	bubbleOther: {
 		backgroundColor: COLOURS.white,
 		borderWidth: 1,
 		borderColor: COLOURS.Plum50,
 		borderRadius: 8,
-
 	},
 
 	bubbleContentRow: {
@@ -1065,7 +1136,7 @@ const styles = StyleSheet.create({
 	},
 	bubbleText: {
 		fontSize: 14,
-		fontWeight: "400", 
+		fontWeight: "400",
 		fontFamily: "Wals-Regular",
 		color: COLOURS.darkBlue,
 		lineHeight: 20,
@@ -1075,14 +1146,13 @@ const styles = StyleSheet.create({
 	bubbleTextMe: { color: COLOURS.darkBlue },
 
 	bubbleMetaInline: {
-        flexDirection: "row",
-        alignItems: "center",
-        position: "relative", 
-        top: 3,               
-    },
+		flexDirection: "row",
+		alignItems: "center",
+		position: "relative",
+		top: 3,
+	},
 	bubbleTime: { fontSize: 11, color: COLOURS.Blue50 },
 	bubbleTimeMe: { color: COLOURS.Blue50 },
-
 
 	dateSeparatorContainer: {
 		alignItems: "center",
@@ -1097,7 +1167,7 @@ const styles = StyleSheet.create({
 	dateSeparatorText: {
 		fontSize: 16,
 		fontWeight: "400",
-		fontFamily: "Wals-Regular", 
+		fontFamily: "Wals-Regular",
 		color: COLOURS.Blue50,
 	},
 	newMessagesDividerContainer: {
@@ -1114,7 +1184,7 @@ const styles = StyleSheet.create({
 		marginHorizontal: 10,
 		fontSize: 16,
 		fontWeight: "400",
-		fontFamily: "Wals-Regular", 
+		fontFamily: "Wals-Regular",
 		color: COLOURS.Blue50,
 	},
 });
