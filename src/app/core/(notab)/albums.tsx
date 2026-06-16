@@ -33,7 +33,6 @@ import {
 } from "@modules/albums/api/photo.api";
 import { CreateAlbumModal } from "@modules/albums/ui/create-album-modal";
 import { BASE_URL } from "@shared/config/api.config";
-import { EyeAlbumButton } from "@shared/ui/images/_images/buttonIcons/eyeAlbum";
 import { TrashAlbumButton } from "@shared/ui/images/_images/buttonIcons/trashAlbum";
 import { PlusButton } from "@shared/ui/images/_images/buttonIcons/plusButton";
 
@@ -187,7 +186,6 @@ function PhotoStrip({
 
 	return (
 		<View style={styles.photoGridSection}>
-			<Text style={styles.photoGridLabel}>Фотографії</Text>
 			<ScrollView
 				horizontal
 				showsHorizontalScrollIndicator={false}
@@ -228,9 +226,6 @@ function PhotoStrip({
 							transition={200}
 						/>
 						<View style={styles.photoCardOverlay}>
-							<TouchableOpacity style={styles.photoIconBtn}>
-								<EyeAlbumButton />
-							</TouchableOpacity>
 							<TouchableOpacity
 								style={styles.photoIconBtn}
 								onPress={() =>
@@ -463,7 +458,6 @@ export default function AlbumsScreen() {
 														toggleAlbum(album.id)
 													}
 												>
-													<EyeAlbumButton />
 												</TouchableOpacity>
 
 												<TouchableOpacity
@@ -582,7 +576,6 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
-		marginBottom: 6,
 	},
 	cardTitle: { fontSize: 16, fontWeight: "600", color: "#1A1A2E" },
 	albumMeta: { fontSize: 13, color: COLOURS.Gray50, marginTop: 2 },
@@ -640,12 +633,6 @@ const styles = StyleSheet.create({
 		marginRight: 10,
 	},
 	photoGridSection: { marginTop: 8 },
-	photoGridLabel: {
-		fontSize: 14,
-		fontWeight: "500",
-		color: "#333",
-		marginBottom: 2,
-	},
 	albumHeaderActions: { flexDirection: "row", alignItems: "center", gap: 8 },
 	iconCircleBtn: {
 		width: 34,

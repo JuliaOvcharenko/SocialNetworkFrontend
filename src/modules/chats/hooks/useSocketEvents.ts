@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { initSocket } from "@shared/socket/socket";
 import { chatsApi } from "@modules/chats/api/chat.api";
-import { messageApi } from "@modules/messages/api/message.api";
 import { ILastMessage } from "../api/chat.types";
 
 export const useSocketEvents = () => {
