@@ -43,7 +43,6 @@ import { MessageImage } from "@modules/chats/api/chat.types";
 export function photoUri(url: string): string {
 	if (!url) return "";
 	if (url.includes("res.cloudinary.com")) {
-		console.log("Cloudinary URL passed through:", url);
 		return url;
 	}
 	if (url.startsWith("http"))
@@ -169,7 +168,6 @@ export default function ChatScreen() {
 		markAsRead();
 	}, [isConnected, markAsRead]);
 
-	console.log("RAW MESSAGES:", JSON.stringify(initialMessages[0], null, 2));
 
 	const allMessages = initialMessages as IMessage[];
 
@@ -444,7 +442,6 @@ export default function ChatScreen() {
 
 	const renderItem = ({ item }: { item: any }) => {
 		if (item.type === "date_separator") {
-			console.log("RENDER ITEM:", item.id, "images:", JSON.stringify(item.messageImages));
 			return (
 				<View style={styles.dateSeparatorContainer}>
 					<View style={styles.dateSeparatorPill}>
