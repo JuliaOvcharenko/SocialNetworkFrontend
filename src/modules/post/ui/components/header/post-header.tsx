@@ -3,12 +3,13 @@ import { View, Text, Image, TouchableOpacity } from "react-native";
 import { styles } from "./post-header.styles";
 import { IPost, IUser } from "../../../types/post.types";
 import { IMAGES } from "@shared/ui/images";
-import { BASE_URL } from "@shared/config/api.config";
 import { getCurrentUserId } from "@shared/api/getCurrentUserId";
 import { CreatePostModal } from "../../create-post-modal";
 import { Ionicons } from "@expo/vector-icons";
 import { useDeletePostMutation } from "@modules/post/api/post.api";
 import { ActionModal } from "@shared/ui/modals/mini-edit-modal";
+import { photoUri } from "@shared/utils/photoUri";
+import { COLOURS } from "@shared/constants/colours";
 
 interface PostHeaderProps {
 	author: IUser;
@@ -29,11 +30,9 @@ export function PostHeader({ author, postId, initialData }: PostHeaderProps) {
 		});
 	}, [author.id]);
 
-	const avatarUri = author.avatarUrl
-		? `${BASE_URL}${author.avatarUrl}`
-		: null;
+	const avatarUri = author.avatarUrl ? photoUri(author.avatarUrl) : null;
 	const signatureUri = author.signatureUrl
-		? `${BASE_URL}${author.signatureUrl}`
+		? photoUri(author.signatureUrl)
 		: null;
 
 	const handleEdit = () => {
@@ -78,9 +77,16 @@ export function PostHeader({ author, postId, initialData }: PostHeaderProps) {
 								]}
 							/>
 						)}
-						{author.isOnline && (
-							<View style={styles.onlineIndicator} />
-						)}
+						<View
+							style={[
+								styles.onlineIndicator,
+								{
+									backgroundColor: author.isOnline
+										? COLOURS.Green100
+										: COLOURS.Blue20,
+								},
+							]}
+						/>
 					</View>
 					<Text style={styles.nickname}>{author.username}</Text>
 				</View>

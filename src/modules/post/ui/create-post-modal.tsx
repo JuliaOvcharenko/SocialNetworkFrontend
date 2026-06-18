@@ -23,7 +23,8 @@ import {
 	useUpdatePostMutation,
 } from "../api/post.api";
 import { IPost } from "../types/post.types";
-import { BASE_URL } from "@shared/config/api.config";
+import { photoUri } from "@shared/utils/photoUri";
+
 
 interface CreatePostModalProps {
 	isVisible: boolean;
@@ -69,7 +70,7 @@ export function CreatePostModal({
 		setExistingImageUrls(
 			initialData.images?.map((img) => {
 				const url = img.compressedImage || img.originalImage;
-				return url.startsWith("http") ? url : `${BASE_URL}${url}`;
+				return photoUri(url);
 			}) ?? [],
 		);
 		setPhotos([]);

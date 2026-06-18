@@ -10,6 +10,7 @@ export interface IUser {
 		pseudonym: string | null;
 		userId: string;
 	} | null;
+	isOnline?: boolean;
 }
 
 export interface IProfile {

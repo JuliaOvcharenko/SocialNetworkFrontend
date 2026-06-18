@@ -49,15 +49,23 @@ const UserRow = React.memo(
 
         return (
             <View style={styles.userRow}>
-                {avatarUri ? (
-                    <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
-                ) : (
-                    <View style={styles.avatarPlaceholder}>
-                        <Text style={styles.avatarText}>
-                            {(item.firstName ?? item.username ?? "?").charAt(0).toUpperCase()}
-                        </Text>
-                    </View>
-                )}
+                <View style={styles.avatarContainer}>
+                    {avatarUri ? (
+                        <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+                    ) : (
+                        <View style={styles.avatarPlaceholder}>
+                            <Text style={styles.avatarText}>
+                                {(item.firstName ?? item.username ?? "?").charAt(0).toUpperCase()}
+                            </Text>
+                        </View>
+                    )}
+                    <View
+                        style={[
+                            styles.statusIndicator,
+                            { backgroundColor: item.isOnline ? COLOURS.Green100 : COLOURS.Blue20 },
+                        ]}
+                    />
+                </View>
                 <Text style={styles.userName}>{item.firstName} {item.lastName}</Text>
                 <TouchableOpacity onPress={() => onRemove(item.id)} style={styles.removeBtn}>
                     <IMAGES.TrashButton style={{ width: 20, height: 20 }} />
@@ -200,11 +208,14 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 10,
     },
+    avatarContainer: {
+        position: "relative",
+        marginRight: 12,
+    },
     avatarImage: {
         width: 48,
         height: 48,
         borderRadius: 24,
-        marginRight: 12,
     },
     header: {
         position: "relative",
@@ -303,12 +314,21 @@ const styles = StyleSheet.create({
         backgroundColor: COLOURS.Plum,
         justifyContent: "center",
         alignItems: "center",
-        marginRight: 12,
     },
     avatarText: {
         color: COLOURS.white,
         fontSize: 16,
         fontFamily: "Wals-Medium",
+    },
+    statusIndicator: {
+        position: "absolute",
+        bottom: 0,
+        right: 0,
+        width: 14,
+        height: 14,
+        borderRadius: 7,
+        borderWidth: 2,
+        borderColor: COLOURS.white,
     },
     userName: {
         flex: 1,

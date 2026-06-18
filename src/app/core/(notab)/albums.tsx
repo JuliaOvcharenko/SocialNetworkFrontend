@@ -35,13 +35,7 @@ import { CreateAlbumModal } from "@modules/albums/ui/create-album-modal";
 import { BASE_URL } from "@shared/config/api.config";
 import { TrashAlbumButton } from "@shared/ui/images/_images/buttonIcons/trashAlbum";
 import { PlusButton } from "@shared/ui/images/_images/buttonIcons/plusButton";
-
-export function photoUri(url: string): string {
-	if (!url) return "";
-	if (url.startsWith("http")) return url;
-	const filename = url.split("/").pop();
-	return `${BASE_URL}/media/shakal/${filename}`;
-}
+import { photoUri } from "@shared/utils/photoUri";
 
 interface AlbumDotsModalProps {
 	visible: boolean;

@@ -30,6 +30,7 @@ import { GalleryButton } from "@shared/ui/images/_images/buttonIcons/galleryButt
 import { PenButton } from "@shared/ui/images/_images/buttonIcons/penButton";
 import { Footer } from "@shared/ui/footer";
 import { BackButton } from "@shared/ui/images/_images/buttonIcons/backButton";
+import { photoUri } from "@shared/utils/photoUri";
 
 const ACCENT = "#543C52";
 const TEXT_PRIMARY = "#1a1d2e";
@@ -37,12 +38,6 @@ const TEXT_SECONDARY = "#8a90a8";
 const CARD_BG = "#ffffff";
 const PLUM = "#543C52";
 
-function photoUri(url: string): string {
-	if (!url) return "";
-	if (url.startsWith("http")) return url;
-	const filename = url.split("/").pop();
-	return `${BASE_URL}/media/shakal/${filename}`;
-}
 
 interface IUserProfile {
 	id: number;

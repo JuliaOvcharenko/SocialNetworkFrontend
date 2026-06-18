@@ -31,6 +31,7 @@ import {
 } from "@modules/chats/api/chat.api";
 import { BASE_URL } from "@shared/config/api.config";
 import { useSocketEvents } from "@modules/chats/hooks/useSocketEvents";
+import { photoUri } from "@shared/utils/photoUri";
 
 type ActiveTab = "contacts" | "messages" | "groupChats";
 
@@ -50,56 +51,69 @@ function formatDate(dateStr: string): string {
 	return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
 }
 
-function photoUri(url: string): string {
-	if (!url) return "";
-	if (url.startsWith("http")) {
-		return url.replace(/^https?:\/\/[^/]+/, BASE_URL);
-	}
-	const filename = url.split("/").pop();
-	return `${BASE_URL}/media/shakal/${filename}`;
-}
 
 function Avatar({
 	size = 52,
 	uri,
 	initials,
 	color,
+	isOnline,
 }: {
 	size?: number;
 	uri?: string;
 	initials?: string;
 	color?: string;
+	isOnline?: boolean;
 }) {
-	if (uri) {
-		return (
-			<Image
-				source={{ uri }}
-				style={{ width: size, height: size, borderRadius: size / 2 }}
-			/>
-		);
-	}
+	const indicatorSize = size * 0.28;
+
 	return (
-		<View
-			style={{
-				width: size,
-				height: size,
-				borderRadius: size / 2,
-				backgroundColor: color ?? COLOURS.Plum,
-				alignItems: "center",
-				justifyContent: "center",
-			}}
-		>
-			{initials ? (
-				<Text
+		<View style={{ width: size, height: size }}>
+			{uri ? (
+				<Image
+					source={{ uri }}
+					style={{ width: size, height: size, borderRadius: size / 2 }}
+				/>
+			) : (
+				<View
 					style={{
-						color: COLOURS.white,
-						fontWeight: "700",
-						fontSize: size * 0.3,
+						width: size,
+						height: size,
+						borderRadius: size / 2,
+						backgroundColor: color ?? COLOURS.Plum,
+						alignItems: "center",
+						justifyContent: "center",
 					}}
 				>
-					{initials}
-				</Text>
-			) : null}
+					{initials ? (
+						<Text
+							style={{
+								color: COLOURS.white,
+								fontWeight: "700",
+								fontSize: size * 0.3,
+							}}
+						>
+							{initials}
+						</Text>
+					) : null}
+				</View>
+			)}
+
+			{isOnline !== undefined && (
+				<View
+					style={{
+						position: "absolute",
+						bottom: 0,
+						right: 0,
+						width: indicatorSize,
+						height: indicatorSize,
+						borderRadius: indicatorSize / 2,
+						backgroundColor: isOnline ? COLOURS.Green100 : COLOURS.Blue20,
+						borderWidth: 2,
+						borderColor: COLOURS.white,
+					}}
+				/>
+			)}
 		</View>
 	);
 }
@@ -224,6 +238,7 @@ function ContactsTab({
 							uri={avatarUri}
 							initials={initials}
 							color={getAvatarColor(name)}
+							isOnline={user.isOnline}
 						/>
 						<Text style={styles.contactName}>{name}</Text>
 					</TouchableOpacity>
@@ -363,6 +378,7 @@ function MessagesTab({ currentUserId }: { currentUserId: number | null }) {
 							uri={avatarUri}
 							initials={initials}
 							color={getAvatarColor(name)}
+							isOnline={other?.isOnline}
 						/>
 						<View style={styles.messageContent}>
 							<View style={styles.messageTop}>
