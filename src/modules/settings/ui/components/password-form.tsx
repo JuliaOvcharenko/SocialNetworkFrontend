@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { Control, FieldErrors, Controller } from "react-hook-form";
 import { Input } from "@shared/ui/input";
-import { SettingsFormData } from "../../lib/settings/settings.schema";
+import { SettingsFormData } from "../../lib/settings.schema";
 
 interface PasswordFormProps {
     control: Control<SettingsFormData>;
@@ -42,7 +42,7 @@ export function PasswordForm({ control, errors, isEditing }: PasswordFormProps) 
                             value={value}
                             error={errors.confirmPassword?.message}
                             isPassword={true}
-                            
+
                         />
                     )}
                 />

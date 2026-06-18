@@ -1,11 +1,13 @@
 import React from "react";
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import { View, Text, Image, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Button } from "@shared/ui/button";
 import { styles } from "./friend-card.styles";
 import { useRouter } from "expo-router";
 import { IProfile, IUser } from "@modules/friends/api/friend.types";
 import { BASE_URL } from "@shared/config/api.config";
 import { COLOURS } from "@shared/constants/colours"; 
+
+import { useChatNavigation } from "@modules/chats/hooks/useChatNavigation"; 
 
 function photoUri(url: string): string {
     if (!url) return "";
@@ -28,6 +30,8 @@ export function FriendCard({
     onSecondaryPress,
 }: FriendCardProps) {
     const router = useRouter();
+    
+    const { navigateToChat, isCreating } = useChatNavigation();
 
     const getPrimaryText = () => {
         if (variant === "request") return "Підтвердити";
@@ -88,25 +92,32 @@ export function FriendCard({
 
             <View style={styles.buttonsRow}>
                 <View style={styles.btnContainer}>
-                    <Button
-                        variant="primary"
-                        title={getPrimaryText()}
-                        onPress={(e) => {
-                            e.stopPropagation?.();
-                            if (variant === "friend") {
-                                router.push(`/core/userscreen/${user.id}`);
-                            } else if (
-                                variant === "request" ||
-                                variant === "recommendation"
-                            ) {
-                                handleCardPress();
-                            } else {
-                                onPrimaryPress();
-                            }
-                        }}
-                        style={styles.fullWidthBtn}
-                        textStyle={styles.btnText}
-                    />
+
+                    {variant === "friend" && isCreating ? (
+                        <View style={styles.loaderBtn}>
+                            <ActivityIndicator color="#FFF" size="small" />
+                        </View>
+                    ) : (
+                        <Button
+                            variant="primary"
+                            title={getPrimaryText()}
+                            onPress={(e) => {
+                                e.stopPropagation?.();
+                                if (variant === "friend") {
+                                    navigateToChat(user.id);
+                                } else if (
+                                    variant === "request" ||
+                                    variant === "recommendation"
+                                ) {
+                                    handleCardPress();
+                                } else {
+                                    onPrimaryPress();
+                                }
+                            }}
+                            style={styles.fullWidthBtn}
+                            textStyle={styles.btnText}
+                        />
+                    )}
                 </View>
                 <View style={styles.btnContainer}>
                     <Button

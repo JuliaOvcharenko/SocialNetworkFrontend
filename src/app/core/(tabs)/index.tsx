@@ -31,7 +31,7 @@ export default function MainScreen() {
 		const cleanNickname = data.nickname.replace("@", "");
 		await updateProfile({
 			username: cleanNickname,
-			profile: { pseudonym: data.authorAlias },
+			pseudonym: data.authorAlias,
 		}).unwrap();
 		setFirstLoginModalVisible(false);
 	};

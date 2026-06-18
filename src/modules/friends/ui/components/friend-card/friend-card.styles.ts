@@ -65,4 +65,12 @@ export const styles = StyleSheet.create({
 		fontFamily: "Wals-light",
 		fontSize: 15,
 	},
+	loaderBtn: {
+        height: 40,
+        backgroundColor: COLOURS.Plum, 
+        borderRadius: 20,
+        justifyContent: "center",
+        alignItems: "center",
+        flex: 1, 
+    },
 });
