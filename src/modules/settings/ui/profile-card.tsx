@@ -6,6 +6,7 @@ import { SettingsFormData } from "../../lib/settings/settings.schema";
 import { COLOURS } from "@shared/constants/colours";
 import { IMAGES } from "@shared/ui/images";
 import { BASE_URL } from "@shared/config/api.config";
+import { photoUri } from "@shared/utils/photoUri";
 
 interface ProfileCardProps {
 	avatar: string | null;
@@ -28,7 +29,7 @@ export function ProfileCard({
 	authorFullName,
 	usernameView,
 }: ProfileCardProps) {
-	const uri = avatar ? `${BASE_URL}${avatar}` : null;
+	const uri = avatar ? photoUri(avatar) : null;
 
 	return (
 		<View style={isEditing ? styles.containerEdit : styles.container}>

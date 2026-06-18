@@ -3,16 +3,10 @@ import { View, Text, Image, TouchableOpacity } from "react-native";
 import { Button } from "@shared/ui/button";
 import { styles } from "./friend-card.styles";
 import { useRouter } from "expo-router";
-import { IProfile, IUser } from "@modules/friends/api/friend.types";
-import { BASE_URL } from "@shared/config/api.config";
+import { IUser } from "@modules/friends/api/friend.types";
 import { COLOURS } from "@shared/constants/colours"; 
+import { photoUri } from "@shared/utils/photoUri";
 
-function photoUri(url: string): string {
-    if (!url) return "";
-    if (url.startsWith("http")) return url;
-    const filename = url.split("/").pop();
-    return `${BASE_URL}/media/shakal/${filename}`;
-}
 
 interface FriendCardProps {
     user: IUser;

@@ -3,7 +3,7 @@ import { View, Text, Image, TouchableOpacity } from "react-native";
 import { styles } from "./post-header.styles";
 import { IPost, IUser } from "../../../types/post.types";
 import { IMAGES } from "@shared/ui/images";
-import { BASE_URL } from "@shared/config/api.config";
+import { photoUri } from "@shared/utils/photoUri";
 import { PostOptionsModal } from "./postOptional/PostOptionsModal";
 import { getCurrentUserId } from "@shared/api/getCurrentUserId";
 import { CreatePostModal } from "../../create-post-modal";
@@ -26,11 +26,9 @@ export function PostHeader({ author, postId, initialData }: PostHeaderProps) {
 		});
 	}, [author.id]);
 
-	const avatarUri = author.avatarUrl
-		? `${BASE_URL}${author.avatarUrl}`
-		: null;
+	const avatarUri = author.avatarUrl ? photoUri(author.avatarUrl) : null;
 	const signatureUri = author.signatureUrl
-		? `${BASE_URL}${author.signatureUrl}`
+		? photoUri(author.signatureUrl)
 		: null;
 
 	const handleEdit = () => {
@@ -59,7 +57,11 @@ export function PostHeader({ author, postId, initialData }: PostHeaderProps) {
 						<View
 							style={[
 								styles.onlineIndicator,
-								{ backgroundColor: author.isOnline ? COLOURS.Green100 : COLOURS.Blue20 }
+								{
+									backgroundColor: author.isOnline
+										? COLOURS.Green100
+										: COLOURS.Blue20,
+								},
 							]}
 						/>
 					</View>

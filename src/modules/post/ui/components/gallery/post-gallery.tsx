@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Image, StyleProp, ImageStyle } from "react-native";
 import { styles } from "./post-gallery.styles";
-import { photoUri } from "../../../../../app/core/(notab)/albums";
+import { photoUri } from "@shared/utils/photoUri";
 
 interface PostGalleryProps {
 	images: any[];

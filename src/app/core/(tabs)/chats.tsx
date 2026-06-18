@@ -31,6 +31,7 @@ import {
 } from "@modules/chats/api/chat.api";
 import { BASE_URL } from "@shared/config/api.config";
 import { useSocketEvents } from "@modules/chats/hooks/useSocketEvents";
+import { photoUri } from "@shared/utils/photoUri";
 
 type ActiveTab = "contacts" | "messages" | "groupChats";
 
@@ -48,15 +49,6 @@ function formatDate(dateStr: string): string {
 	const d = new Date(dateStr);
 	if (isNaN(d.getTime())) return "";
 	return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
-}
-
-function photoUri(url: string): string {
-	if (!url) return "";
-	if (url.startsWith("http")) {
-		return url.replace(/^https?:\/\/[^/]+/, BASE_URL);
-	}
-	const filename = url.split("/").pop();
-	return `${BASE_URL}/media/shakal/${filename}`;
 }
 
 

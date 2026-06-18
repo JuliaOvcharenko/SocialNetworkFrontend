@@ -33,6 +33,7 @@ import {
 } from "@modules/auth/api/user-api";
 import { BASE_URL } from "@shared/config/api.config";
 import { useRouter } from "expo-router";
+import { photoUri } from "@shared/utils/photoUri";
 
 export default function SettingsScreen() {
 	const { data: user, isLoading: isUserLoading } = useGetMeQuery();
@@ -48,7 +49,8 @@ export default function SettingsScreen() {
 	const [isEditingPersonal, setIsEditingPersonal] = useState(false);
 	const [isEditingPassword, setIsEditingPassword] = useState(false);
 	const [isEditingSignature, setIsEditingSignature] = useState(false);
-	const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
+	const [updateProfile, { isLoading: isUpdating }] =
+		useUpdateProfileMutation();
 
 	const [isAliasSelected, setIsAliasSelected] = useState(true);
 	const [isElectronicSelected, setIsElectronicSelected] = useState(true);
@@ -98,7 +100,7 @@ export default function SettingsScreen() {
 			});
 
 			if (user.profile?.avatar) {
-				setAvatarUri(`${BASE_URL}${user.profile.avatar}`);
+				setAvatarUri(photoUri(user.profile.avatar));
 			}
 		}
 	}, [user, reset]);

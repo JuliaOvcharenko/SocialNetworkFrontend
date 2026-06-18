@@ -39,17 +39,8 @@ import {
 import { useGetAllFriendsQuery } from "@modules/friends/api/friend.api";
 import { IUser } from "@modules/friends/api/friend.types";
 import { MessageImage } from "@modules/chats/api/chat.types";
+import { photoUri } from "@shared/utils/photoUri";
 
-export function photoUri(url: string): string {
-	if (!url) return "";
-	if (url.includes("res.cloudinary.com")) {
-		return url;
-	}
-	if (url.startsWith("http"))
-		return url.replace(/^https?:\/\/[^/]+/, BASE_URL);
-	const filename = url.split("/").pop();
-	return `${BASE_URL}/media/shakal/${filename}`;
-}
 
 function formatSeparatorDate(dateStr: string): string {
 	const d = new Date(dateStr);
