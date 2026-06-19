@@ -29,7 +29,6 @@ import {
 	useGetGroupChatsQuery,
 	useGetPersonalChatsQuery,
 } from "@modules/chats/api/chat.api";
-import { BASE_URL } from "@shared/config/api.config";
 import { useSocketEvents } from "@modules/chats/hooks/useSocketEvents";
 import { photoUri } from "@shared/utils/photoUri";
 
@@ -51,7 +50,6 @@ function formatDate(dateStr: string): string {
 	return `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
 }
 
-
 function Avatar({
 	size = 52,
 	uri,
@@ -72,7 +70,11 @@ function Avatar({
 			{uri ? (
 				<Image
 					source={{ uri }}
-					style={{ width: size, height: size, borderRadius: size / 2 }}
+					style={{
+						width: size,
+						height: size,
+						borderRadius: size / 2,
+					}}
 				/>
 			) : (
 				<View
@@ -108,7 +110,9 @@ function Avatar({
 						width: indicatorSize,
 						height: indicatorSize,
 						borderRadius: indicatorSize / 2,
-						backgroundColor: isOnline ? COLOURS.Green100 : COLOURS.Blue20,
+						backgroundColor: isOnline
+							? COLOURS.Green100
+							: COLOURS.Blue20,
 						borderWidth: 2,
 						borderColor: COLOURS.white,
 					}}
@@ -269,8 +273,6 @@ function MessagesTab({ currentUserId }: { currentUserId: number | null }) {
 			return name.toLowerCase().includes(q);
 		});
 	}, [search, personalChats, currentUserId]);
-
-	
 
 	if (isLoading)
 		return (
@@ -442,7 +444,7 @@ function MessagesTab({ currentUserId }: { currentUserId: number | null }) {
 	);
 }
 
-function GroupChatsTab() {
+function GroupChatsTab({ currentUserId }: { currentUserId: number | null }) {
 	const router = useRouter();
 	const [search, setSearch] = useState("");
 	const { data: groupChats = [], isLoading } = useGetGroupChatsQuery();
@@ -455,15 +457,6 @@ function GroupChatsTab() {
 			: (groupChats as IChat[]).filter((c) =>
 					(c.name ?? "").toLowerCase().includes(q),
 				);
-		console.log(
-			"chats dates:",
-			chats.map((c) => ({
-				id: c.id,
-				lastMessage: c.lastMessage?.createdAt,
-				updatedAt: c.updatedAt,
-				createdAt: c.createdAt,
-			})),
-		);
 
 		return [...chats].sort((a, b) => {
 			const dateA = new Date(
@@ -511,7 +504,9 @@ function GroupChatsTab() {
 				const lastMsg = chat.lastMessage;
 				let lastText = "";
 				if (lastMsg) {
-					if (lastMsg.text) lastText = lastMsg.text;
+					const senderName = lastMsg.sender?.username ?? "";
+					const prefix = senderName ? `${senderName}: ` : "";
+					if (lastMsg.text) lastText = `${prefix}${lastMsg.text}`;
 					else if (
 						(
 							lastMsg as IChat["lastMessage"] & {
@@ -524,10 +519,17 @@ function GroupChatsTab() {
 							}
 						)?.messageImages?.length ?? 0) > 0
 					)
-						lastText = "Фотографія";
+						lastText = `${prefix}Фотографія`;
 				} else {
 					lastText = `${(chat.users?.length ?? 0) + 1} учасників`;
 				}
+
+				const isMyLastMsg =
+					lastMsg &&
+					String(lastMsg.senderId) === String(currentUserId);
+				const isRead =
+					(lastMsg?.chat_app_message_readers?.length ?? 0) > 0;
+				const unreadCount = chat._count?.messages ?? 0;
 
 				const dateSource =
 					lastMsg?.createdAt || chat.updatedAt || chat.createdAt;
@@ -573,9 +575,48 @@ function GroupChatsTab() {
 									{lastTime}
 								</Text>
 							</View>
-							<Text style={styles.messageText} numberOfLines={1}>
-								{lastText}
-							</Text>
+							<View style={styles.messageBottom}>
+								<Text
+									style={styles.messageText}
+									numberOfLines={1}
+								>
+									{lastText}
+								</Text>
+								<View
+									style={{
+										flexDirection: "row",
+										alignItems: "center",
+										gap: 4,
+									}}
+								>
+									{isMyLastMsg && (
+										<Ionicons
+											name={
+												isRead
+													? "checkmark-done"
+													: "checkmark"
+											}
+											size={14}
+											color={
+												isRead
+													? COLOURS.Plum
+													: COLOURS.Blue50
+											}
+										/>
+									)}
+									{!isMyLastMsg && unreadCount > 0 && (
+										<View style={styles.unreadBadge}>
+											<Text
+												style={styles.unreadBadgeText}
+											>
+												{unreadCount > 99
+													? "99+"
+													: unreadCount}
+											</Text>
+										</View>
+									)}
+								</View>
+							</View>
 						</View>
 					</TouchableOpacity>
 				);
@@ -773,7 +814,9 @@ export default function ChatsScreen() {
 				{activeTab === "messages" && (
 					<MessagesTab currentUserId={currentUserId} />
 				)}
-				{activeTab === "groupChats" && <GroupChatsTab />}
+				{activeTab === "groupChats" && (
+					<GroupChatsTab currentUserId={currentUserId} />
+				)}
 			</ScrollView>
 			<SelectUsersModal
 				visible={isSelectModalOpen}

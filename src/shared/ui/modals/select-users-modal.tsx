@@ -17,6 +17,7 @@ import { SearchInput } from "../searchInput/searchInput";
 import { CustomCheckboxRow } from "../custom-checkbox-row/custom-checkbox-row";
 import { IUser } from "@modules/friends/api/friend.types";
 import { BASE_URL } from "@shared/config/api.config";
+import { photoUri } from "@shared/utils/photoUri";
 
 interface SelectUsersModalProps {
     visible: boolean;
@@ -25,14 +26,6 @@ interface SelectUsersModalProps {
     onSave: (selectedIds: string[]) => void;
     title: string;
     buttonText: string;
-}
-
-function resolveAvatar(avatar: string | null | undefined): string | null {
-    if (!avatar) return null;
-    if (avatar.startsWith("http"))
-        return avatar.replace(/^https?:\/\/[^/]+/, BASE_URL);
-    const filename = avatar.split("/").pop();
-    return `${BASE_URL}/media/shakal/${filename}`;
 }
 
 const UserItem = React.memo(
@@ -45,7 +38,7 @@ const UserItem = React.memo(
         isSelected: boolean;
         onToggle: (id: string) => void;
     }) => {
-        const avatarUri = resolveAvatar(item.profile?.avatar);
+        const avatarUri = item.profile?.avatar ? photoUri(item.profile.avatar) : null;
 
         return (
             <TouchableOpacity
