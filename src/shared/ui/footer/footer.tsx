@@ -10,6 +10,7 @@ import {
     useGetPersonalChatsQuery,
 } from "@modules/chats/api/chat.api";
 import { useMemo, useState, useEffect } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export function Footer() {
     const pathname = usePathname();
@@ -19,18 +20,31 @@ export function Footer() {
     const { data: requests = [] } = useGetRequestsQuery();
     
     const [seenRequestIds, setSeenRequestIds] = useState<Set<string>>(new Set());
+    const [isStorageLoaded, setIsStorageLoaded] = useState(false);
 
     useEffect(() => {
-        if (pathname.includes("friends") && requests.length > 0) {
+        AsyncStorage.getItem('seen_friend_requests').then((storedIds) => {
+            if (storedIds) {
+                setSeenRequestIds(new Set(JSON.parse(storedIds)));
+            }
+            setIsStorageLoaded(true);
+        });
+    }, []);
+
+    useEffect(() => {
+        if (pathname.includes("friends") && requests?.length > 0) {
             setSeenRequestIds((prev) => {
                 const newSeen = new Set(prev);
                 requests.forEach((r) => newSeen.add(String(r.id)));
+                AsyncStorage.setItem('seen_friend_requests', JSON.stringify(Array.from(newSeen)));
                 return newSeen;
             });
         }
     }, [pathname, requests]);
 
-    const pendingRequestsCount = requests.filter((r) => !seenRequestIds.has(String(r.id))).length;
+    const pendingRequestsCount = requests?.filter(
+        (r) => !seenRequestIds.has(String(r.id))
+    )?.length || 0;
 
     const { data: personal = [] } = useGetPersonalChatsQuery();
     const { data: group = [] } = useGetGroupChatsQuery();
@@ -88,7 +102,7 @@ export function Footer() {
                 <View style={styles.tabItem}>
                     <View style={{ position: "relative" }}>
                         <IMAGES.friendsButton style={styles.iconSmall} />
-                        {pendingRequestsCount > 0 && (
+                        {isStorageLoaded && pendingRequestsCount > 0 && (
                             <View style={styles.badge}>
                                 <Text style={styles.badgeText}>
                                     {pendingRequestsCount > 9 ? "9+" : pendingRequestsCount}
@@ -127,6 +141,8 @@ export function Footer() {
         </View>
     );
 }
+
+
 
 const styles = StyleSheet.create({
     container: {

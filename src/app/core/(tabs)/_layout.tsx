@@ -1,4 +1,4 @@
-import { Tabs, usePathname } from "expo-router"; // Додано usePathname
+import { Tabs, usePathname } from "expo-router";
 import { StyleSheet, View, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLOURS } from "@shared/constants/colours";
@@ -10,12 +10,12 @@ import {
 } from "@modules/chats/api/chat.api";
 import { useGetRequestsQuery } from "@modules/friends/api/friend.api"; 
 import { useMemo, useState, useEffect } from "react"; 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function TabLayout() {
     const insets = useSafeAreaInsets();
     const pathname = usePathname();
 
-  
     const { data: personal = [] } = useGetPersonalChatsQuery();
     const { data: group = [] } = useGetGroupChatsQuery();
 
@@ -25,27 +25,34 @@ export default function TabLayout() {
         return sum(personal) + sum(group);
     }, [personal, group]);
 
-
     const { data: requests = [] } = useGetRequestsQuery();
     
-
     const [seenRequestIds, setSeenRequestIds] = useState<Set<string>>(new Set());
-
+    const [isStorageLoaded, setIsStorageLoaded] = useState(false);
 
     useEffect(() => {
-        if (pathname.includes("friends") && requests.length > 0) {
+        AsyncStorage.getItem('seen_friend_requests').then((storedIds) => {
+            if (storedIds) {
+                setSeenRequestIds(new Set(JSON.parse(storedIds)));
+            }
+            setIsStorageLoaded(true);
+        });
+    }, []);
+
+    useEffect(() => {
+        if (pathname.includes("friends") && requests?.length > 0) {
             setSeenRequestIds((prev) => {
                 const newSeen = new Set(prev);
                 requests.forEach((r) => newSeen.add(String(r.id)));
+                AsyncStorage.setItem('seen_friend_requests', JSON.stringify(Array.from(newSeen)));
                 return newSeen;
             });
         }
     }, [pathname, requests]);
 
-
-    const unseenRequestsCount = requests.filter(
+    const unseenRequestsCount = requests?.filter(
         (r) => !seenRequestIds.has(String(r.id))
-    ).length;
+    )?.length || 0;
 
     return (
         <Tabs
@@ -131,7 +138,7 @@ export default function TabLayout() {
                             <View style={{ position: "relative" }}>
                                 <IMAGES.friendsButton style={styles.iconSmall} />
                                 
-                                {unseenRequestsCount > 0 && (
+                                {isStorageLoaded && unseenRequestsCount > 0 && (
                                     <View style={styles.badge}>
                                         <Text style={styles.badgeText}>
                                             {unseenRequestsCount > 9 ? "9+" : unseenRequestsCount}

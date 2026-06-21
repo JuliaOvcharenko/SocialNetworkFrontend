@@ -27,8 +27,13 @@ export function useSettings() {
     });
 
     const formatSeparatorDate = (dateStr: string): string => {
+        if (!dateStr) return "";
+
         const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return "";
+
+        if (isNaN(d.getTime()) || d.getTime() === 0) {
+            return "";
+        }
         const months = ["січня", "лютого", "березня", "квітня", "травня", "червня", "липня", "серпня", "вересня", "жовтня", "листопада", "грудня"];
         return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
     };
@@ -46,13 +51,14 @@ export function useSettings() {
             });
             if (user.profile?.avatar) setAvatarUri(`${BASE_URL}${user.profile.avatar}`);
         }
+        
     }, [user, reset]);
 
     const pickAvatarImage = async (isReplace: boolean) => {
         if (!isEditingProfile || isUploading) return;
         const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 1 });
         if (result.canceled || !result.assets?.length) return;
-        
+
         const asset = result.assets[0];
         if (!asset.uri) return;
 
