@@ -257,6 +257,12 @@ function MessagesTab({ currentUserId }: { currentUserId: number | null }) {
 	const [search, setSearch] = useState("");
 	const { data: personalChats = [], isLoading } = useGetPersonalChatsQuery();
 
+
+	const unreadTotal = useMemo(() => 
+        (personalChats as IChat[]).reduce((sum, c) => sum + (c._count?.messages ?? 0), 0),
+		[personalChats]);
+	
+	
 	const filtered = useMemo((): IChat[] => {
 		if (!search.trim()) return personalChats as IChat[];
 		const q = search.toLowerCase();
@@ -284,12 +290,21 @@ function MessagesTab({ currentUserId }: { currentUserId: number | null }) {
 	return (
 		<View style={styles.panel}>
 			<View style={styles.panelHeader}>
-				<IMAGES.chatButton
-					style={{ width: 17, height: 17 }}
-					tintColor="#7e8499"
-				/>
-				<Text style={styles.panelTitle}>Повідомлення</Text>
-			</View>
+                <View style={{ position: "relative" }}>
+                    <IMAGES.chatButton
+                        style={{ width: 17, height: 17 }}
+                        tintColor="#7e8499"
+                    />
+                    {unreadTotal > 0 && (
+                        <View style={styles.tabBadge}>
+                            <Text style={styles.tabBadgeText}>
+                                {unreadTotal > 99 ? "99+" : unreadTotal}
+                            </Text>
+                        </View>
+                    )}
+                </View>
+                <Text style={styles.panelTitle}>Повідомлення</Text>
+            </View>
 			<View style={styles.panelHeaderSearch}>
 				<SearchInput
 					value={search}
@@ -449,6 +464,12 @@ function GroupChatsTab({ currentUserId }: { currentUserId: number | null }) {
 	const [search, setSearch] = useState("");
 	const { data: groupChats = [], isLoading } = useGetGroupChatsQuery();
 
+
+	const unreadTotal = useMemo(() => 
+        (groupChats as IChat[]).reduce((sum, c) => sum + (c._count?.messages ?? 0), 0),
+		[groupChats]);
+	
+	
 	const filtered = useMemo((): IChat[] => {
 		const q = search.toLowerCase();
 
@@ -479,12 +500,21 @@ function GroupChatsTab({ currentUserId }: { currentUserId: number | null }) {
 	return (
 		<View style={styles.panel}>
 			<View style={styles.panelHeader}>
-				<IMAGES.chatButton
-					style={{ width: 17, height: 17 }}
-					tintColor="#7e8499"
-				/>
-				<Text style={styles.panelTitle}>Групові чати</Text>
-			</View>
+                <View style={{ position: "relative" }}>
+                    <IMAGES.chatButton
+                        style={{ width: 17, height: 17 }}
+                        tintColor="#7e8499"
+                    />
+                    {unreadTotal > 0 && (
+                        <View style={styles.tabBadge}>
+                            <Text style={styles.tabBadgeText}>
+                                {unreadTotal > 99 ? "99+" : unreadTotal}
+                            </Text>
+                        </View>
+                    )}
+                </View>
+                <Text style={styles.panelTitle}>Групові чати</Text>
+            </View>
 			<View style={styles.panelHeaderSearch}>
 				<SearchInput
 					value={search}

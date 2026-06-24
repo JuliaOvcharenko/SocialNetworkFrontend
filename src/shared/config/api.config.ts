@@ -1,6 +1,6 @@
 
-const IP_ADDRESS = '192.168.0.225';
-// const IP_ADDRESS = 'localhost';
+// const IP_ADDRESS = '192.168.0.225';
+const IP_ADDRESS = 'localhost';
 const PORT = '8001';
 
 export const BASE_URL = `http://${IP_ADDRESS}:${PORT}`;
