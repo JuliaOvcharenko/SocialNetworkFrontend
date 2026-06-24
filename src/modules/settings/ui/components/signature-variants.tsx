@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontFamily: 'Wals-Medium',
         color: COLOURS.darkBlue, 
-        marginLeft: 34, // Відступ під чекбокс
+        marginLeft: 34,
     },
     signatureImage: {
         width: '100%',

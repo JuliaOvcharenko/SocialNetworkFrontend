@@ -83,6 +83,7 @@ const UserItem = React.memo(
     (prevProps, nextProps) => prevProps.isSelected === nextProps.isSelected,
 );
 
+
 export function SelectUsersModal({
     visible,
     onClose,

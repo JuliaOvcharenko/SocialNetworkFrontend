@@ -13,8 +13,6 @@ import { COLOURS } from "@shared/constants/colours";
 import { Button } from "@shared/ui/button";
 import { IMAGES } from "@shared/ui/images";
 import { Input } from "@shared/ui/input";
-import { IUser } from "@modules/friends/api/friend.types";
-import { BASE_URL } from "@shared/config/api.config";
 import { photoUri } from "@shared/utils/photoUri";
 
 export interface GroupDetailsData {
@@ -24,7 +22,7 @@ export interface GroupDetailsData {
 interface GroupDetailsModalProps {
 	visible: boolean;
 	onClose: () => void;
-	selectedUsers: IUser[];
+	selectedUsers: any[];
 	onRemoveUser: (id: string) => void;
 	onAddMore: () => void;
 	onSubmit: (data: GroupDetailsData) => void;
@@ -37,9 +35,12 @@ interface GroupDetailsModalProps {
 }
 
 const UserRow = React.memo(
-	({ item, onRemove }: { item: IUser; onRemove: (id: string) => void }) => {
-		const avatarUri = item.profile?.avatar
-			? photoUri(item.profile.avatar)
+	({ item, onRemove }: { item: any; onRemove: (id: string) => void }) => {
+		const user = item?.user;
+		if (!user) return null;
+
+		const avatarUri = user.profile?.avatar
+			? photoUri(user.profile.avatar)
 			: null;
 
 		return (
@@ -53,7 +54,7 @@ const UserRow = React.memo(
 					) : (
 						<View style={styles.avatarPlaceholder}>
 							<Text style={styles.avatarText}>
-								{(item.firstName ?? item.username ?? "?")
+								{(user.firstName ?? user.username ?? "?")
 									.charAt(0)
 									.toUpperCase()}
 							</Text>
@@ -63,7 +64,7 @@ const UserRow = React.memo(
 						style={[
 							styles.statusIndicator,
 							{
-								backgroundColor: item.isOnline
+								backgroundColor: user.isOnline
 									? COLOURS.Green100
 									: COLOURS.Blue20,
 							},
@@ -71,10 +72,10 @@ const UserRow = React.memo(
 					/>
 				</View>
 				<Text style={styles.userName}>
-					{item.firstName} {item.lastName}
+					{user.firstName} {user.lastName}
 				</Text>
 				<TouchableOpacity
-					onPress={() => onRemove(item.id)}
+					onPress={() => onRemove(String(user.id))}
 					style={styles.removeBtn}
 				>
 					<IMAGES.TrashButton style={{ width: 20, height: 20 }} />
@@ -82,7 +83,7 @@ const UserRow = React.memo(
 			</View>
 		);
 	},
-	(prev, next) => prev.item.id === next.item.id,
+	(prev, next) => prev.item?.id === next.item?.id,
 );
 
 export function GroupDetailsModal({
@@ -205,7 +206,7 @@ export function GroupDetailsModal({
 						>
 							{selectedUsers.map((item) => (
 								<UserRow
-									key={item.id}
+									key={String(item.id)}
 									item={item}
 									onRemove={onRemoveUser}
 								/>

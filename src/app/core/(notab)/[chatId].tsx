@@ -6,8 +6,6 @@ import {
 	TouchableOpacity,
 	FlatList,
 	StyleSheet,
-	KeyboardAvoidingView,
-	Platform,
 	Image,
 	ActivityIndicator,
 	Alert,
@@ -40,7 +38,7 @@ import { useGetAllFriendsQuery } from "@modules/friends/api/friend.api";
 import { IUser } from "@modules/friends/api/friend.types";
 import { MessageImage } from "@modules/chats/api/chat.types";
 import { photoUri } from "@shared/utils/photoUri";
-
+import { KeyboardSafeScreen } from "@shared/ui/keyboard-safe-screen";
 
 function formatSeparatorDate(dateStr: string): string {
 	const d = new Date(dateStr);
@@ -158,7 +156,6 @@ export default function ChatScreen() {
 		if (!isConnected) return;
 		markAsRead();
 	}, [isConnected, markAsRead]);
-
 
 	const allMessages = initialMessages as IMessage[];
 
@@ -318,14 +315,14 @@ export default function ChatScreen() {
 		}
 	};
 
-	const handleRemoveUser = (userId: number) => {
+	const handleRemoveUser = (userId: string) => {
 		Alert.alert("Видалити учасника", "Ви впевнені?", [
 			{ text: "Скасувати", style: "cancel" },
 			{
 				text: "Видалити",
 				style: "destructive",
 				onPress: () =>
-					removeUser(userId, (res: { status: string }) => {
+					removeUser(Number(userId), (res: { status: string }) => {
 						if (res.status !== "ok")
 							Alert.alert(
 								"Помилка",
@@ -372,6 +369,18 @@ export default function ChatScreen() {
 				},
 			},
 		]);
+	};
+
+	const handleAddUsers = (selectedUsers: IUser[]) => {
+		const userIds: number[] = selectedUsers.map((u) => Number(u.id));
+		if (userIds.length === 0) return;
+		addUsers(userIds, (res: { status: string }) => {
+			if (res.status === "ok") {
+				setIsAddUsersModalOpen(false);
+			} else {
+				Alert.alert("Помилка", "Не вдалося додати користувачів");
+			}
+		});
 	};
 
 	const chatHeaderInfo = (() => {
@@ -550,21 +559,6 @@ export default function ChatScreen() {
 													styles.imageFullRow,
 											]}
 											resizeMode="cover"
-											onError={(e) =>
-												console.log(
-													"IMAGE LOAD ERROR:",
-													img.image,
-													JSON.stringify(
-														e.nativeEvent,
-													),
-												)
-											}
-											onLoad={() =>
-												console.log(
-													"IMAGE LOADED OK:",
-													img.image,
-												)
-											}
 										/>
 									);
 								})}
@@ -650,11 +644,7 @@ export default function ChatScreen() {
 	};
 
 	return (
-		<KeyboardAvoidingView
-			style={styles.container}
-			behavior={Platform.OS === "ios" ? "padding" : undefined}
-			keyboardVerticalOffset={90}
-		>
+		<KeyboardSafeScreen style={styles.container} footer={<Footer />}>
 			<Header
 				showCreateButton
 				showLogoutButton
@@ -711,10 +701,10 @@ export default function ChatScreen() {
 					<Text style={styles.headerName}>{chatHeaderInfo.name}</Text>
 					<Text style={styles.headerSub}>
 						{isGroup
-							? `${(chatDetails?.users?.length ?? 0) + 1} учасників`
+							? `${(chatDetails?.users?.length ?? 0) + 1} участников`
 							: isConnected
 								? "онлайн"
-								: "з'єднання..."}
+								: "соединение..."}
 					</Text>
 				</View>
 				<TouchableOpacity
@@ -736,14 +726,12 @@ export default function ChatScreen() {
 			) : (
 				<FlatList
 					ref={flatListRef}
+					style={{ flex: 1 }}
 					data={processedMessages}
 					keyExtractor={(item) => String(item.id)}
 					renderItem={renderItem}
 					contentContainerStyle={styles.messagesList}
-					initialNumToRender={20}
-					maxToRenderPerBatch={10}
-					windowSize={5}
-					removeClippedSubviews={true}
+					keyboardShouldPersistTaps="handled"
 					onContentSizeChange={() =>
 						flatListRef.current?.scrollToEnd({ animated: false })
 					}
@@ -771,8 +759,6 @@ export default function ChatScreen() {
 				</TouchableOpacity>
 			</View>
 
-			<Footer />
-
 			{isActionModalOpen && (
 				<>
 					<TouchableOpacity
@@ -781,89 +767,83 @@ export default function ChatScreen() {
 						onPress={() => setIsActionModalOpen(false)}
 					/>
 					<View style={styles.dropdownModal}>
-						<View style={styles.dropdownDots}>
-							<TouchableOpacity
-								style={styles.moreBtn}
-								onPress={() => setIsActionModalOpen(false)}
-							>
-								<Ionicons
-									name="ellipsis-vertical"
-									size={20}
-									color={COLOURS.Blue50}
-								/>
-							</TouchableOpacity>
-						</View>
+						<TouchableOpacity
+							style={styles.dropdownDots}
+							onPress={() => setIsActionModalOpen(false)}
+						>
+							<Ionicons
+								name="ellipsis-vertical"
+								size={20}
+								color={COLOURS.Blue50}
+							/>
+						</TouchableOpacity>
 
 						<TouchableOpacity
 							style={styles.dropdownItem}
-							activeOpacity={0.7}
+							onPress={() => {
+							}}
 						>
-							<IMAGES.GalleryButton
-								style={{ width: 17, height: 17 }}
+							<Ionicons
+								name="image-outline"
+								size={20}
+								color={COLOURS.darkBlue}
 							/>
 							<Text style={styles.dropdownText}>Медіа</Text>
 						</TouchableOpacity>
 
 						{isGroup && isAdmin && (
-							<TouchableOpacity
-								style={styles.dropdownItem}
-								activeOpacity={0.7}
-								onPress={() => {
-									setIsActionModalOpen(false);
-									setIsEditModalOpen(true);
-								}}
-							>
-								<IMAGES.PenButton
-									style={{ width: 16, height: 16 }}
-								/>
-								<Text style={styles.dropdownText}>
-									Редагувати групу
-								</Text>
-							</TouchableOpacity>
+							<>
+								<TouchableOpacity
+									style={styles.dropdownItem}
+									onPress={() => {
+										setIsActionModalOpen(false);
+										setIsEditModalOpen(true);
+									}}
+								>
+									<Ionicons
+										name="create-outline"
+										size={20}
+										color={COLOURS.darkBlue}
+									/>
+									<Text style={styles.dropdownText}>
+										Редагувати групу
+									</Text>
+								</TouchableOpacity>
+							</>
 						)}
 
 						<View style={styles.dropdownDivider} />
 
-						{isGroup && !isAdmin && (
+						{isGroup ? (
 							<TouchableOpacity
 								style={styles.dropdownItem}
-								activeOpacity={0.7}
-								onPress={() => {
-									setIsActionModalOpen(false);
-									handleLeaveChat();
-								}}
+								onPress={handleLeaveChat}
 							>
 								<Ionicons
 									name="log-out-outline"
-									size={19}
-									color={COLOURS.darkBlue}
-								/>
-								<Text style={styles.dropdownText}>
-									Покинути групу
-								</Text>
-							</TouchableOpacity>
-						)}
-
-						{isAdmin && (
-							<TouchableOpacity
-								style={styles.dropdownItem}
-								activeOpacity={0.7}
-								onPress={() => {
-									setIsActionModalOpen(false);
-									handleDeleteChat();
-								}}
-							>
-								<Ionicons
-									name="trash-outline"
-									size={17}
-									color="#e76f51"
+									size={20}
+									color="red"
 								/>
 								<Text
 									style={[
 										styles.dropdownText,
-										{ color: "#e76f51" },
+										{ color: "red" },
 									]}
 								>
+									Покинути групу
+								</Text>
+							</TouchableOpacity>
+						) : (
+							<TouchableOpacity
+								style={styles.dropdownItem}
+								onPress={handleDeleteChat}
+							>
+								<Ionicons
+									name="trash-outline"
+									size={20}
+									color={COLOURS.darkBlue}
+								/>
+								<Text style={styles.dropdownText}>
 									Видалити чат
 								</Text>
 							</TouchableOpacity>
@@ -872,51 +852,42 @@ export default function ChatScreen() {
 				</>
 			)}
 
-			<GroupDetailsModal
-				visible={isEditModalOpen}
-				onClose={() => {
-					setIsEditModalOpen(false);
-					setGroupPhotoUri(null);
-				}}
-				selectedUsers={
-					(chatDetails?.users?.map((u) => ({
-						...u.user,
-						id: String(u.userId),
-						email: "",
-					})) as IUser[]) ?? []
-				}
-				onRemoveUser={(userId) => handleRemoveUser(Number(userId))}
-				onAddMore={() => setIsAddUsersModalOpen(true)}
-				onSubmit={handleEditGroup}
-				title="Редагування групи"
-				buttonText="Зберегти зміни"
-				initialName={chatDetails?.name ?? ""}
-				groupPhotoUri={
-					groupPhotoUri ??
-					(chatDetails?.avatar ? photoUri(chatDetails.avatar) : null)
-				}
-				onAddPhoto={handlePickGroupPhoto}
-				onReplacePhoto={handlePickGroupPhoto}
-			/>
+			{isGroup && (
+				<GroupDetailsModal
+					visible={isEditModalOpen}
+					onClose={() => {
+						setIsEditModalOpen(false);
+						setGroupPhotoUri(null);
+					}}
+					onSubmit={handleEditGroup}
+					selectedUsers={(chatDetails?.users ?? []).map(
+						(p) => p.user,
+					)}
+					onRemoveUser={handleRemoveUser}
+					onAddMore={() => setIsAddUsersModalOpen(true)}
+					title="Редагувати групу"
+					buttonText="Зберегти"
+					initialName={chatDetails?.name ?? ""}
+					groupPhotoUri={groupPhotoUri}
+					onReplacePhoto={handlePickGroupPhoto}
+					onAddPhoto={handlePickGroupPhoto}
+				/>
+			)}
 
 			<SelectUsersModal
 				visible={isAddUsersModalOpen}
 				onClose={() => setIsAddUsersModalOpen(false)}
 				users={nonParticipants}
-				onSave={(ids) => {
-					setIsAddUsersModalOpen(false);
-					addUsers(ids.map(Number), (res: { status: string }) => {
-						if (res.status !== "ok")
-							Alert.alert(
-								"Помилка",
-								"Не вдалося додати учасників",
-							);
-					});
+				onSave={(selectedIds: string[]) => {
+					const selectedUsersObjects = nonParticipants.filter(
+						(user) => selectedIds.includes(user.id),
+					);
+					handleAddUsers(selectedUsersObjects);
 				}}
 				title="Додати учасників"
 				buttonText="Додати"
 			/>
-		</KeyboardAvoidingView>
+		</KeyboardSafeScreen>
 	);
 }
 
@@ -1118,7 +1089,6 @@ const styles = StyleSheet.create({
 
 	bubbleContentRowOther: {
 		minWidth: 100,
-
 		justifyContent: "space-between",
 		width: "100%",
 	},

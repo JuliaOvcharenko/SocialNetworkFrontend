@@ -2,10 +2,9 @@ import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { Control, Controller } from "react-hook-form";
 import { Input } from "@shared/ui/input";
-import { SettingsFormData } from "../../lib/settings/settings.schema";
+import { SettingsFormData } from "../../lib/settings.schema";
 import { COLOURS } from "@shared/constants/colours";
 import { IMAGES } from "@shared/ui/images";
-import { BASE_URL } from "@shared/config/api.config";
 import { photoUri } from "@shared/utils/photoUri";
 
 interface ProfileCardProps {

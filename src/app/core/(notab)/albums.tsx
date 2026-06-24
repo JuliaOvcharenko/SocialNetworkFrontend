@@ -32,7 +32,6 @@ import {
 	Photo,
 } from "@modules/albums/api/photo.api";
 import { CreateAlbumModal } from "@modules/albums/ui/create-album-modal";
-import { BASE_URL } from "@shared/config/api.config";
 import { TrashAlbumButton } from "@shared/ui/images/_images/buttonIcons/trashAlbum";
 import { PlusButton } from "@shared/ui/images/_images/buttonIcons/plusButton";
 import { photoUri } from "@shared/utils/photoUri";

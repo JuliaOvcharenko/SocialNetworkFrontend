@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Control, FieldErrors, Controller } from "react-hook-form";
 import { Input } from "@shared/ui/input";
-import { SettingsFormData } from '@modules/lib/settings/settings.schema';
+import { SettingsFormData } from '@modules/settings/lib/settings.schema';
 import { IMAGES } from "@shared/ui/images";
 
 interface PersonalDataFormProps {
